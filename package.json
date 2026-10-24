@@ -4,7 +4,7 @@
   "private": true,
   "description": "A private, shareable memorial tribute book",
   "scripts": {
-    "start": "node --env-file-if-exists=.env server.js"
+    "start": "node --env-file-if-exists=.env local-server.js"
   },
   "engines": {
     "node": ">=22.13"

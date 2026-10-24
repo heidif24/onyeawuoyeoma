@@ -1,20 +1,6 @@
 {
-  "version": 2,
-  "builds": [
-    { "src": "api/**/*.js", "use": "@vercel/node" },
-    { "src": "public/**", "use": "@vercel/static" }
-  ],
-  "routes": [
-    { "src": "/api/config", "dest": "/api/config" },
-    { "src": "/api/tributes", "dest": "/api/tributes" },
-    { "src": "/api/admin/login", "dest": "/api/admin/login" },
-    { "src": "/api/admin/logout", "dest": "/api/admin/logout" },
-    { "src": "/api/admin/portrait", "dest": "/api/admin/portrait" },
-    { "src": "/api/admin/tributes", "dest": "/api/admin/tributes" },
-    { "src": "/api/admin/tribute-status", "dest": "/api/admin/tribute-status" },
-    { "src": "/api/admin/export/docx", "dest": "/api/admin/export/docx" },
-    { "src": "/api/admin/export/pdf", "dest": "/api/admin/export/pdf" },
-    { "src": "/admin/?", "dest": "/public/admin.html" },
-    { "src": "/(.*)", "dest": "/public/$1" }
+  "rewrites": [
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/admin/", "destination": "/admin.html" }
   ]
 }
