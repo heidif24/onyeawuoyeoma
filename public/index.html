@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#f9f1d8">
+    <meta name="theme-color" content="#f7f5ef">
     <meta name="description" content="A place to remember a beloved wife, mother, grandmother, and friend.">
     <title>In Loving Memory</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,24 +22,25 @@
     </header>
 
     <main>
-      <section class="memorial-hero" aria-labelledby="memorial-name">
-        <div class="hero-bg" aria-hidden="true">
-          <div class="hero-bloom hero-bloom-1"></div>
-          <div class="hero-bloom hero-bloom-2"></div>
-          <div class="hero-bloom hero-bloom-3"></div>
-          <div class="hero-petal-field"></div>
+      <section class="memorial-hero" id="memorial-hero" aria-labelledby="memorial-name">
+        <div class="hero-left">
+          <img
+            class="memorial-image"
+            src="https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=2200&q=85"
+            alt="A sunlit garden of soft flowers and lilies"
+            fetchpriority="high"
+          >
+          <div class="hero-copy">
+            <p class="eyebrow hero-eyebrow">A life remembered with love</p>
+            <h1>In loving memory of <span class="memorial-name" id="memorial-name">Mrs. Onyewuoyeoma Blessing Nwaneri</span></h1>
+            <p class="hero-description">Beloved wife, mother, grandmother, and the heart of her family.</p>
+            <a class="hero-link" href="#leave-a-tribute">Share a memory <span aria-hidden="true">↘</span></a>
+          </div>
+          <p class="hero-caption">Her love remains in every story we tell.</p>
         </div>
-        <div class="portrait-wrap" id="portrait-wrap" hidden>
+        <div class="hero-right" id="portrait-wrap" hidden>
           <img class="memorial-portrait" id="portrait-image" alt="">
         </div>
-        <div class="hero-secondary-photo" id="hero-secondary" aria-hidden="true"></div>
-        <div class="hero-copy">
-          <p class="eyebrow hero-eyebrow">A life remembered with love</p>
-          <h1>In loving memory of <span class="memorial-name" id="memorial-name">Mrs. Onyewuoyeoma Blessing Nwaneri</span></h1>
-          <p class="hero-description">Beloved wife, mother, grandmother, and the heart of her family.</p>
-          <a class="hero-link" href="#leave-a-tribute">Share a memory <span aria-hidden="true">↘</span></a>
-        </div>
-        <p class="hero-caption">Her love remains in every story we tell.</p>
       </section>
 
       <section class="tribute-wall" aria-labelledby="tribute-wall-title">
