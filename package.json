@@ -4,10 +4,10 @@
   "private": true,
   "description": "A private, shareable memorial tribute book",
   "scripts": {
-    "start": "node --env-file-if-exists=.env local-server.js"
+    "local": "node --env-file-if-exists=.env local-server.js"
   },
   "engines": {
-    "node": ">=22"
+    "node": "22.x"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.2.0",
