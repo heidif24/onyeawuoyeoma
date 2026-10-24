@@ -15,7 +15,7 @@ Open `http://localhost:3000`. The family page is at `/admin`. Tributes are store
 
 ## Share with family and friends
 
-Deploy this Node.js app to a host that supports persistent disk storage, configure `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and `MEMORIAL_NAME` as environment variables, and use HTTPS. Share the deployed root URL for the memorial page. Keep the same persistent `DATABASE_PATH` between deploys so submissions are retained. Admin sessions are held in memory and expire after 12 hours.
+For Vercel, connect a Postgres database and a Blob store to the project, then set `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and `MEMORIAL_NAME` in project environment variables. Make sure `POSTGRES_URL` and `BLOB_READ_WRITE_TOKEN` are available to the deployment. Vercel serves the pages statically and routes `/api/*` to serverless functions; the local SQLite server is only used by `npm start`. Share the deployed root URL for the memorial page and use HTTPS. Admin sessions expire after 12 hours.
 
 New tributes are private by default. Writers can separately consent to online display and printed name attribution. The family reviews each submission at `/admin`; only consented, approved messages appear on the memorial page. The family can download all submissions, including writer names, as `.docx` and `.pdf` files.
 
@@ -25,4 +25,4 @@ At `/admin`, sign in to change the portrait, review tributes, publish or unpubli
 
 To change the hero portrait, choose a JPEG, PNG, or WebP image in the portrait section. Drag to reposition, use the zoom and rotate controls, and save when the circular preview looks right. The cropped image is saved as `public/images/her-portrait.jpg`, layered over the existing flower photograph. Choose another image at any time to replace it. The original upload is not exposed to visitors; only the cropped JPEG is stored.
 
-The portrait file is stored with the app, so include `public/images/her-portrait.jpg` in backups and ensure the deployed app can write to `public/images`. The default database location is `data/tributes.sqlite`; both it and the portrait directory need persistent storage on the hosting provider.
+The portrait is stored in Vercel Blob, and tribute records are stored in Postgres. On local development, the portrait and SQLite database are stored in the project directory.

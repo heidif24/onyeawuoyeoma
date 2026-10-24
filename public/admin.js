@@ -24,9 +24,9 @@ function showPortrait(url) {
 
 async function loadPortrait() {
   const response = await fetch('/api/config');
-  const { portraitAvailable } = await response.json();
+  const { portraitAvailable, portraitUrl } = await response.json();
   if (portraitAvailable) {
-    showPortrait('/images/her-portrait.jpg');
+    showPortrait(portraitUrl || '/images/her-portrait.jpg');
   } else {
     portraitCurrent.hidden = true;
     portraitStatus.textContent = 'No portrait yet. Choose a photo to add one to the flower hero.';
@@ -230,7 +230,7 @@ saveCropButton.addEventListener('click', () => {
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'The portrait could not be saved.');
-      showPortrait('/images/her-portrait.jpg');
+      showPortrait(result.portraitUrl || '/images/her-portrait.jpg');
       portraitStatus.textContent = 'Her photo is now in the flower hero.';
       dashboardStatus.textContent = 'Memorial portrait updated.';
       dashboardStatus.classList.remove('is-error');

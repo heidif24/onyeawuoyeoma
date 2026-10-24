@@ -201,6 +201,9 @@ const server = http.createServer(async (request, response) => {
       return sendJson(response, 200, {
         memorialName,
         portraitAvailable: fs.existsSync(path.join(__dirname, 'public', 'images', 'her-portrait.jpg')),
+        portraitUrl: fs.existsSync(path.join(__dirname, 'public', 'images', 'her-portrait.jpg'))
+          ? '/images/her-portrait.jpg'
+          : null,
       });
     }
 

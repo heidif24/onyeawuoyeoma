@@ -37,13 +37,13 @@ function renderPublishedTributes(tributes) {
 
 fetch('/api/config')
   .then((response) => response.json())
-  .then(({ memorialName: name, portraitAvailable }) => {
+  .then(({ memorialName: name, portraitAvailable, portraitUrl }) => {
     if (name) {
       memorialName.textContent = name;
       document.title = `In Loving Memory of ${name}`;
     }
     if (portraitAvailable) {
-      portraitImage.src = '/images/her-portrait.jpg';
+      portraitImage.src = portraitUrl || '/images/her-portrait.jpg';
       portraitImage.alt = `Portrait of ${name || 'her'}`;
       portraitWrap.hidden = false;
     }
