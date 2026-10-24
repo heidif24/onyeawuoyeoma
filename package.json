@@ -1,0 +1,17 @@
+{
+  "name": "onyeawuoyeoma-memorial",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A private, shareable memorial tribute book",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "dependencies": {
+    "cropperjs": "^1.6.2",
+    "docx": "^9.5.1",
+    "pdfkit": "^0.17.2"
+  }
+}

@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f7f5ef">
+    <title>Family access | In Loving Memory</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/vendor/cropper.css">
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/vendor/cropper.js" defer></script>
+    <script src="/admin.js" defer></script>
+  </head>
+  <body class="admin-page">
+    <header class="site-header">
+      <a class="wordmark" href="/">
+        <span class="wordmark-mark" aria-hidden="true">✳</span>
+        <span>Family access</span>
+      </a>
+      <a class="header-link" href="/">Return to memorial <span aria-hidden="true">↗</span></a>
+    </header>
+
+    <main class="admin-main">
+      <section class="admin-heading">
+        <p class="eyebrow">A private space for family</p>
+        <h1>Tributes, gathered with love.</h1>
+        <p>Sign in to read the messages shared for your family and prepare a collection for printing.</p>
+      </section>
+
+      <section class="login-section" id="login-section" aria-labelledby="login-title">
+        <h2 id="login-title">Family sign in</h2>
+        <form id="login-form" class="login-form">
+          <label for="admin-username">Username</label>
+          <input id="admin-username" name="username" type="text" autocomplete="username" required>
+          <label for="admin-password">Admin password</label>
+          <input id="admin-password" name="password" type="password" autocomplete="current-password" required>
+          <button class="submit-button" type="submit">Sign in <span aria-hidden="true">↗</span></button>
+          <p class="form-status" id="login-status" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="admin-dashboard" id="admin-dashboard" hidden>
+        <section class="portrait-settings" aria-labelledby="portrait-title">
+          <div class="portrait-current" id="portrait-current" hidden>
+            <img id="portrait-thumbnail" alt="Current memorial portrait">
+          </div>
+          <div class="portrait-copy">
+            <p class="eyebrow">The memorial portrait</p>
+            <h2 id="portrait-title">Her photo</h2>
+            <p id="portrait-status">Choose a photo and adjust its crop before saving.</p>
+          </div>
+          <label class="download-button portrait-select" for="portrait-file">Choose a photo</label>
+          <input class="visually-hidden" id="portrait-file" type="file" accept="image/jpeg,image/png,image/webp">
+        </section>
+
+        <div class="dashboard-toolbar">
+          <div>
+            <p class="eyebrow">Private family collection</p>
+            <h2>Shared with love</h2>
+            <p class="tribute-count" id="tribute-count"></p>
+          </div>
+          <div class="dashboard-actions">
+            <a class="download-button" href="/api/admin/export/docx">Download Word</a>
+            <a class="download-button download-button-secondary" href="/api/admin/export/pdf">Download PDF</a>
+            <button class="text-button" type="button" id="logout-button">Sign out</button>
+          </div>
+        </div>
+        <p class="form-status" id="dashboard-status" role="status" aria-live="polite"></p>
+        <div class="tribute-list" id="tribute-list" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <dialog class="crop-dialog" id="crop-dialog" aria-labelledby="crop-title">
+      <div class="crop-dialog-header">
+        <div>
+          <p class="eyebrow">Adjust portrait</p>
+          <h2 id="crop-title">Frame her photo</h2>
+        </div>
+        <button class="text-button" type="button" id="cancel-crop">Cancel</button>
+      </div>
+      <div class="crop-stage"><img id="crop-image" alt="Portrait crop preview"></div>
+      <div class="crop-controls" aria-label="Crop controls">
+        <button class="crop-control" type="button" id="zoom-out" aria-label="Zoom out">−</button>
+        <button class="crop-control" type="button" id="zoom-in" aria-label="Zoom in">+</button>
+        <button class="crop-control crop-rotate" type="button" id="rotate-left">Rotate</button>
+      </div>
+      <p class="crop-hint">Drag to reposition. The circular frame shows how it will appear in the hero.</p>
+      <div class="crop-dialog-actions">
+        <button class="text-button" type="button" id="discard-crop">Cancel</button>
+        <button class="submit-button" type="button" id="save-crop">Save portrait <span aria-hidden="true">↗</span></button>
+      </div>
+      <p class="form-status" id="crop-status" role="status" aria-live="polite"></p>
+    </dialog>
+
+    <footer class="site-footer">
+      <span>Held in love, always.</span>
+      <a href="/">View memorial</a>
+    </footer>
+  </body>
+</html>
