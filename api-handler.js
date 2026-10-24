@@ -44,20 +44,20 @@ async function ensureSchema() {
   if (!schemaReady) {
     const query = getSql();
     schemaReady = (async () => {
-      await query(`CREATE TABLE IF NOT EXISTS tributes (
+      await query`CREATE TABLE IF NOT EXISTS tributes (
         id BIGSERIAL PRIMARY KEY,
         name TEXT NOT NULL,
         message TEXT NOT NULL,
         created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
         status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'published')),
         public_consent BOOLEAN NOT NULL DEFAULT FALSE
-      )`);
-      await query("ALTER TABLE tributes ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending'");
-      await query('ALTER TABLE tributes ADD COLUMN IF NOT EXISTS public_consent BOOLEAN NOT NULL DEFAULT FALSE');
-      await query(`CREATE TABLE IF NOT EXISTS memorial_assets (
+      )`;
+      await query`ALTER TABLE tributes ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending'`;
+      await query`ALTER TABLE tributes ADD COLUMN IF NOT EXISTS public_consent BOOLEAN NOT NULL DEFAULT FALSE`;
+      await query`CREATE TABLE IF NOT EXISTS memorial_assets (
         name TEXT PRIMARY KEY,
         url TEXT NOT NULL
-      )`);
+      )`;
     })();
   }
   await schemaReady;
@@ -201,119 +201,129 @@ function jsonTribute(row) {
 }
 
 async function handler(request, response) {
-  const url = new URL(request.url, `https://${request.headers.host || 'localhost'}`);
-  const path = url.pathname;
+  try {
+    const url = new URL(request.url, `https://${request.headers.host || 'localhost'}`);
+    const path = url.pathname;
 
-  if (request.method === 'GET' && path === '/api/config') {
-    let portraitUrl = null;
-    try {
-      const query = await ensureSchema();
-      const result = await query("SELECT url FROM memorial_assets WHERE name = 'portrait'");
-      portraitUrl = result[0]?.url || null;
-    } catch {
-      // Keep the memorial readable if storage has not been connected yet.
-    }
-    return respond(response, 200, { memorialName, portraitAvailable: Boolean(portraitUrl), portraitUrl });
-  }
-
-  if (request.method === 'GET' && path === '/api/tributes') {
-    const query = await ensureSchema();
-    const result = await query(`SELECT id, name, message,
-      to_char(created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS') AS "createdAt"
-      FROM tributes WHERE status = 'published' ORDER BY created_at ASC, id ASC`);
-    return respond(response, 200, { tributes: result.map(jsonTribute) });
-  }
-
-  if (request.method === 'POST' && path === '/api/tributes') {
-    if (isRateLimited(request, response, 'tribute', 8, 15 * 60 * 1000)) return;
-    const body = await readJson(request);
-    const name = typeof body.name === 'string' ? body.name.trim() : '';
-    const message = typeof body.message === 'string' ? body.message.trim() : '';
-    if (!name || name.length > 100 || !message || message.length > 5000 || body.consent !== true) {
-      return respond(response, 400, { error: 'Add your name, a message, and confirm name attribution.' });
-    }
-    const query = await ensureSchema();
-    await query('INSERT INTO tributes (name, message, public_consent) VALUES ($1, $2, $3)', [name, message, body.publicConsent === true]);
-    return respond(response, 201, { message: 'Your tribute has been sent to the family for review.' });
-  }
-
-  if (request.method === 'POST' && path === '/api/admin/login') {
-    if (isRateLimited(request, response, 'login', 8, 15 * 60 * 1000)) return;
-    if (!adminUsername || !passwordHash) return respond(response, 503, { error: 'Admin sign-in has not been configured.' });
-    const body = await readJson(request);
-    const matches = passwordMatches(body.password);
-    if (body.username !== adminUsername || !matches) {
-      return respond(response, 401, { error: 'That username and password did not match.' });
-    }
-    const secure = process.env.NODE_ENV === 'production' || process.env.VERCEL ? '; Secure' : '';
-    return respond(response, 200, { message: 'Signed in.' }, {
-      'Set-Cookie': `memorial_session=${createSession()}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${sessionDuration / 1000}${secure}`,
-    });
-  }
-
-  if (request.method === 'POST' && path === '/api/admin/logout') {
-    return respond(response, 200, { message: 'Signed out.' }, {
-      'Set-Cookie': 'memorial_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0; Secure',
-    });
-  }
-
-  if (path.startsWith('/api/admin/')) {
-    if (!hasAdminSession(request)) return respond(response, 401, { error: 'Please sign in to continue.' });
-    if (request.method === 'POST' && path === '/api/admin/portrait') {
-      if (!process.env.BLOB_READ_WRITE_TOKEN) throw fail('Connect Vercel Blob storage before uploading a portrait.', 503);
-      if (request.headers['content-type'] !== 'image/jpeg') throw fail('Please upload the cropped photo as a JPEG.', 415);
-      const image = await readBody(request, 3 * 1024 * 1024);
-      if (image.length < 4 || image[0] !== 0xff || image[1] !== 0xd8 || image.at(-2) !== 0xff || image.at(-1) !== 0xd9) {
-        throw fail('The uploaded crop is not a valid JPEG image.', 400);
+    if (request.method === 'GET' && path === '/api/config') {
+      let portraitUrl = null;
+      try {
+        const query = await ensureSchema();
+        const result = await query`SELECT url FROM memorial_assets WHERE name = 'portrait'`;
+        portraitUrl = result[0]?.url || null;
+      } catch {
+        // Keep the memorial readable if storage has not been connected yet.
       }
-      const blob = await put('her-portrait.jpg', image, {
-        access: 'public',
-        addRandomSuffix: false,
-        allowOverwrite: true,
-        contentType: 'image/jpeg',
-      });
-      const query = await ensureSchema();
-      await query(`INSERT INTO memorial_assets (name, url) VALUES ('portrait', $1)
-        ON CONFLICT (name) DO UPDATE SET url = EXCLUDED.url`, [blob.url]);
-      return respond(response, 200, { message: 'Portrait updated.', portraitUrl: blob.url });
+      return respond(response, 200, { memorialName, portraitAvailable: Boolean(portraitUrl), portraitUrl });
     }
 
-    if (request.method === 'GET' && path === '/api/admin/tributes') {
+    if (request.method === 'GET' && path === '/api/tributes') {
       const query = await ensureSchema();
-      const result = await query(`SELECT id, name, message, status, public_consent AS "publicConsent",
+      const result = await query`SELECT id, name, message,
         to_char(created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS') AS "createdAt"
-        FROM tributes ORDER BY CASE status WHEN 'pending' THEN 0 ELSE 1 END, created_at DESC, id DESC`);
+        FROM tributes WHERE status = 'published' ORDER BY created_at ASC, id ASC`;
       return respond(response, 200, { tributes: result.map(jsonTribute) });
     }
 
-    if (request.method === 'PATCH' && path === '/api/admin/tribute-status') {
+    if (request.method === 'POST' && path === '/api/tributes') {
+      if (isRateLimited(request, response, 'tribute', 8, 15 * 60 * 1000)) return;
       const body = await readJson(request);
-      if (body.status !== 'pending' && body.status !== 'published') {
-        return respond(response, 400, { error: 'Choose whether to publish this tribute.' });
+      const name = typeof body.name === 'string' ? body.name.trim() : '';
+      const message = typeof body.message === 'string' ? body.message.trim() : '';
+      if (!name || name.length > 100 || !message || message.length > 5000 || body.consent !== true) {
+        return respond(response, 400, { error: 'Add your name, a message, and confirm name attribution.' });
       }
-      if (!/^\d+$/.test(String(body.id))) return respond(response, 400, { error: 'Choose a valid tribute.' });
       const query = await ensureSchema();
-      const result = await query('SELECT public_consent FROM tributes WHERE id = $1', [body.id]);
-      if (!result.length) return respond(response, 404, { error: 'Tribute not found.' });
-      if (body.status === 'published' && result[0].public_consent !== true) {
-        return respond(response, 403, { error: 'This writer did not give permission for public display.' });
-      }
-      await query('UPDATE tributes SET status = $1 WHERE id = $2', [body.status, body.id]);
-      return respond(response, 200, { message: 'Tribute status updated.' });
+      const publicConsent = body.publicConsent === true;
+      await query`INSERT INTO tributes (name, message, public_consent) VALUES (${name}, ${message}, ${publicConsent})`;
+      return respond(response, 201, { message: 'Your tribute has been sent to the family for review.' });
     }
 
-    if (request.method === 'GET' && (path === '/api/admin/export/docx' || path === '/api/admin/export/pdf')) {
-      const query = await ensureSchema();
-      const result = await query(`SELECT name, message,
-        to_char(created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS') AS "createdAt"
-        FROM tributes ORDER BY created_at ASC, id ASC`);
-      return path.endsWith('/docx')
-        ? await sendWordDocument(response, result)
-        : await sendPdfDocument(response, result);
+    if (request.method === 'POST' && path === '/api/admin/login') {
+      if (isRateLimited(request, response, 'login', 8, 15 * 60 * 1000)) return;
+      if (!adminUsername || !passwordHash) return respond(response, 503, { error: 'Admin sign-in has not been configured.' });
+      const body = await readJson(request);
+      const matches = passwordMatches(body.password);
+      if (body.username !== adminUsername || !matches) {
+        return respond(response, 401, { error: 'That username and password did not match.' });
+      }
+      const secure = process.env.NODE_ENV === 'production' || process.env.VERCEL ? '; Secure' : '';
+      return respond(response, 200, { message: 'Signed in.' }, {
+        'Set-Cookie': `memorial_session=${createSession()}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${sessionDuration / 1000}${secure}`,
+      });
     }
+
+    if (request.method === 'POST' && path === '/api/admin/logout') {
+      return respond(response, 200, { message: 'Signed out.' }, {
+        'Set-Cookie': 'memorial_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0; Secure',
+      });
+    }
+
+    if (path.startsWith('/api/admin/')) {
+      if (!hasAdminSession(request)) return respond(response, 401, { error: 'Please sign in to continue.' });
+      if (request.method === 'POST' && path === '/api/admin/portrait') {
+        if (!process.env.BLOB_READ_WRITE_TOKEN) throw fail('Connect Vercel Blob storage before uploading a portrait.', 503);
+        if (request.headers['content-type'] !== 'image/jpeg') throw fail('Please upload the cropped photo as a JPEG.', 415);
+        const image = await readBody(request, 3 * 1024 * 1024);
+        if (image.length < 4 || image[0] !== 0xff || image[1] !== 0xd8 || image.at(-2) !== 0xff || image.at(-1) !== 0xd9) {
+          throw fail('The uploaded crop is not a valid JPEG image.', 400);
+        }
+        const blob = await put('her-portrait.jpg', image, {
+          access: 'public',
+          addRandomSuffix: false,
+          allowOverwrite: true,
+          contentType: 'image/jpeg',
+        });
+        const query = await ensureSchema();
+        await query`INSERT INTO memorial_assets (name, url) VALUES ('portrait', ${blob.url})
+          ON CONFLICT (name) DO UPDATE SET url = EXCLUDED.url`;
+        return respond(response, 200, { message: 'Portrait updated.', portraitUrl: blob.url });
+      }
+
+      if (request.method === 'GET' && path === '/api/admin/tributes') {
+        const query = await ensureSchema();
+        const result = await query`SELECT id, name, message, status, public_consent AS "publicConsent",
+          to_char(created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS') AS "createdAt"
+          FROM tributes ORDER BY CASE status WHEN 'pending' THEN 0 ELSE 1 END, created_at DESC, id DESC`;
+        return respond(response, 200, { tributes: result.map(jsonTribute) });
+      }
+
+      if (request.method === 'PATCH' && path === '/api/admin/tribute-status') {
+        const body = await readJson(request);
+        if (body.status !== 'pending' && body.status !== 'published') {
+          return respond(response, 400, { error: 'Choose whether to publish this tribute.' });
+        }
+        if (!/^\d+$/.test(String(body.id))) return respond(response, 400, { error: 'Choose a valid tribute.' });
+        const query = await ensureSchema();
+        const result = await query`SELECT public_consent FROM tributes WHERE id = ${body.id}`;
+        if (!result.length) return respond(response, 404, { error: 'Tribute not found.' });
+        if (body.status === 'published' && result[0].public_consent !== true) {
+          return respond(response, 403, { error: 'This writer did not give permission for public display.' });
+        }
+        await query`UPDATE tributes SET status = ${body.status} WHERE id = ${body.id}`;
+        return respond(response, 200, { message: 'Tribute status updated.' });
+      }
+
+      if (request.method === 'GET' && (path === '/api/admin/export/docx' || path === '/api/admin/export/pdf')) {
+        const query = await ensureSchema();
+        const result = await query`SELECT name, message,
+          to_char(created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS') AS "createdAt"
+          FROM tributes ORDER BY created_at ASC, id ASC`;
+        return path.endsWith('/docx')
+          ? await sendWordDocument(response, result)
+          : await sendPdfDocument(response, result);
+      }
+    }
+
+    return respond(response, 404, { error: 'Not found.' });
+  } catch (error) {
+    const statusCode = error.statusCode || 500;
+    const message = statusCode >= 500
+      ? 'Something went wrong. Please try again shortly.'
+      : (error.message || 'Request failed.');
+    if (statusCode >= 500) console.error(error);
+    return respond(response, statusCode, { error: message });
   }
-
-  return respond(response, 404, { error: 'Not found.' });
 }
 
 module.exports = handler;
