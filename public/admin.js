@@ -16,6 +16,13 @@ const saveCropButton = document.querySelector('#save-crop');
 let cropper;
 let cropSource;
 
+async function readApiResponse(response) {
+  if (!response.headers.get('content-type')?.includes('application/json')) {
+    throw new Error(`Admin service unavailable (HTTP ${response.status}). Please try again later.`);
+  }
+  return response.json();
+}
+
 function showPortrait(url) {
   portraitThumbnail.src = `${url}?v=${Date.now()}`;
   portraitCurrent.hidden = false;
@@ -24,7 +31,7 @@ function showPortrait(url) {
 
 async function loadPortrait() {
   const response = await fetch('/api/config');
-  const { portraitAvailable, portraitUrl } = await response.json();
+  const { portraitAvailable, portraitUrl } = await readApiResponse(response);
   if (portraitAvailable) {
     showPortrait(portraitUrl || '/images/her-portrait.jpg');
   } else {
@@ -83,7 +90,7 @@ function renderTributes(tributes) {
 async function showDashboard() {
   const response = await fetch('/api/admin/tributes');
   if (response.status === 401) return false;
-  const result = await response.json();
+  const result = await readApiResponse(response);
   if (!response.ok) throw new Error(result.error || 'Tributes could not be loaded.');
   renderTributes(result.tributes);
   await loadPortrait();
@@ -114,7 +121,7 @@ loginForm.addEventListener('submit', async (event) => {
         password: formData.get('password'),
       }),
     });
-    const result = await response.json();
+    const result = await readApiResponse(response);
     if (!response.ok) throw new Error(result.error || 'Sign in failed.');
     loginForm.reset();
     await showDashboard();
@@ -145,9 +152,9 @@ tributeList.addEventListener('click', async (event) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: button.dataset.tributeId, status: button.dataset.nextStatus }),
     });
-    const result = await response.json();
+    const result = await readApiResponse(response);
     if (!response.ok) throw new Error(result.error || 'Tribute status could not be updated.');
-    const refreshed = await fetch('/api/admin/tributes').then((value) => value.json());
+    const refreshed = await fetch('/api/admin/tributes').then(readApiResponse);
     renderTributes(refreshed.tributes);
     dashboardStatus.textContent = button.dataset.nextStatus === 'published'
       ? 'Tribute approved and now visible on the memorial page.'
@@ -228,7 +235,7 @@ saveCropButton.addEventListener('click', () => {
         headers: { 'Content-Type': 'image/jpeg' },
         body: image,
       });
-      const result = await response.json();
+      const result = await readApiResponse(response);
       if (!response.ok) throw new Error(result.error || 'The portrait could not be saved.');
       showPortrait(result.portraitUrl || '/images/her-portrait.jpg');
       portraitStatus.textContent = 'Her photo is now in the flower hero.';

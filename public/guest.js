@@ -7,6 +7,13 @@ const portraitWrap = document.querySelector('#portrait-wrap');
 const portraitImage = document.querySelector('#portrait-image');
 const publishedTributes = document.querySelector('#published-tributes');
 
+async function readApiResponse(response) {
+  if (!response.headers.get('content-type')?.includes('application/json')) {
+    throw new Error(`Tribute service unavailable (HTTP ${response.status}). Please try again later.`);
+  }
+  return response.json();
+}
+
 function renderPublishedTributes(tributes) {
   publishedTributes.replaceChildren();
   if (!tributes.length) {
@@ -36,7 +43,7 @@ function renderPublishedTributes(tributes) {
 }
 
 fetch('/api/config')
-  .then((response) => response.json())
+  .then(readApiResponse)
   .then(({ memorialName: name, portraitAvailable, portraitUrl }) => {
     if (name) {
       memorialName.textContent = name;
@@ -51,7 +58,7 @@ fetch('/api/config')
   .catch(() => {});
 
 fetch('/api/tributes')
-  .then((response) => response.json())
+  .then(readApiResponse)
   .then(({ tributes }) => renderPublishedTributes(tributes))
   .catch(() => {});
 
@@ -78,7 +85,7 @@ tributeForm.addEventListener('submit', async (event) => {
         publicConsent: formData.get('publicConsent') === 'on',
       }),
     });
-    const result = await response.json();
+    const result = await readApiResponse(response);
     if (!response.ok) throw new Error(result.error || 'Your tribute could not be sent. Please try again.');
     tributeForm.reset();
     characterCount.textContent = '0 / 5000';
