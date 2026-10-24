@@ -26,7 +26,7 @@ async function readApiResponse(response) {
 function showPortrait(url) {
   portraitThumbnail.src = `${url}?v=${Date.now()}`;
   portraitCurrent.hidden = false;
-  portraitStatus.textContent = 'The photo appears as a circular portrait over the flowers.';
+  portraitStatus.textContent = 'Her photo fills the right half of the lily hero as a large portrait panel.';
 }
 
 async function loadPortrait() {
@@ -36,7 +36,7 @@ async function loadPortrait() {
     showPortrait(portraitUrl || '/images/her-portrait.jpg');
   } else {
     portraitCurrent.hidden = true;
-    portraitStatus.textContent = 'No portrait yet. Choose a photo to add one to the flower hero.';
+    portraitStatus.textContent = 'No portrait yet. Choose a photo — it will appear large on the right half of the hero.';
   }
 }
 
@@ -183,12 +183,12 @@ portraitFile.addEventListener('change', () => {
   cropImage.onload = () => {
     cropper?.destroy();
     cropper = new Cropper(cropImage, {
-      aspectRatio: 1,
+      aspectRatio: 4 / 5,
       viewMode: 1,
       dragMode: 'move',
-      autoCropArea: 0.88,
+      autoCropArea: 0.9,
       background: false,
-      guides: false,
+      guides: true,
       responsive: true,
       restore: false,
     });
@@ -217,8 +217,8 @@ cropDialog.addEventListener('close', () => {
 
 saveCropButton.addEventListener('click', () => {
   const canvas = cropper?.getCroppedCanvas({
-    width: 1200,
-    height: 1200,
+    width: 1400,
+    height: 1750,
     fillColor: '#ffffff',
     imageSmoothingEnabled: true,
     imageSmoothingQuality: 'high',
@@ -238,7 +238,7 @@ saveCropButton.addEventListener('click', () => {
       const result = await readApiResponse(response);
       if (!response.ok) throw new Error(result.error || 'The portrait could not be saved.');
       showPortrait(result.portraitUrl || '/images/her-portrait.jpg');
-      portraitStatus.textContent = 'Her photo is now in the flower hero.';
+      portraitStatus.textContent = 'Her photo now fills the right half of the lily hero.';
       dashboardStatus.textContent = 'Memorial portrait updated.';
       dashboardStatus.classList.remove('is-error');
       cropDialog.close();
@@ -247,5 +247,5 @@ saveCropButton.addEventListener('click', () => {
     } finally {
       saveCropButton.disabled = false;
     }
-  }, 'image/jpeg', 0.9);
+  }, 'image/jpeg', 0.92);
 });

@@ -1,16 +1,13 @@
 :root {
   color-scheme: light;
-  --paper: #faf6eb;
-  --paper-deep: #f3ecd8;
-  --ink: #2c3228;
+  --paper: #f7f5ef;
+  --paper-deep: #efede5;
+  --ink: #29342e;
   --muted: #6d756f;
   --green: #3b5949;
   --green-dark: #2d4538;
-  --rose: #c17a68;
-  --gold: #d4a84b;
-  --sun: #f5e6b8;
-  --sun-deep: #e8d48a;
-  --rule: #e0d9c4;
+  --rose: #ad7067;
+  --rule: #d8d8cf;
   --serif: 'Playfair Display', Georgia, serif;
   --sans: 'DM Sans', 'Trebuchet MS', sans-serif;
 }
@@ -32,99 +29,65 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .site-footer { border-top: 1px solid var(--rule); color: var(--muted); font-size: 11px; }
 .site-footer a:hover, .header-link:hover { color: var(--green); }
 
-/* ——— Warm yellow floral hero ——— */
+/* ——— Split lily + large portrait hero ——— */
 .memorial-hero {
   position: relative;
-  display: flex;
-  min-height: min(720px, 82svh);
-  align-items: center;
+  display: grid;
+  grid-template-columns: 1fr;
+  min-height: min(720px, 84svh);
   overflow: hidden;
   isolation: isolate;
-  background: linear-gradient(145deg, #f7ecd0 0%, #f0d98a 38%, #e8c96a 68%, #d4b45a 100%);
-  color: var(--ink);
+  background: #37483c;
+  color: white;
 }
 
-.hero-bg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
+.memorial-hero.has-portrait {
+  grid-template-columns: 1fr 1fr;
+}
+
+.hero-left {
+  position: relative;
+  min-height: min(720px, 84svh);
+  display: flex;
+  align-items: center;
   overflow: hidden;
 }
 
-.hero-bloom {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(40px);
-  opacity: 0.55;
-}
-.hero-bloom-1 {
-  width: 42vw; height: 42vw; max-width: 520px; max-height: 520px;
-  top: -12%; right: -8%;
-  background: radial-gradient(circle, #f8c4a8 0%, #f0a878 40%, transparent 70%);
-}
-.hero-bloom-2 {
-  width: 36vw; height: 36vw; max-width: 420px; max-height: 420px;
-  bottom: -18%; left: -6%;
-  background: radial-gradient(circle, #ffe9a8 0%, #f0d060 45%, transparent 70%);
-}
-.hero-bloom-3 {
-  width: 28vw; height: 28vw; max-width: 340px; max-height: 340px;
-  top: 35%; left: 28%;
-  background: radial-gradient(circle, #f5d0c0 0%, #e8b0a0 50%, transparent 70%);
-  opacity: 0.4;
-}
-
-.hero-petal-field {
+.memorial-image {
   position: absolute;
   inset: 0;
-  background-image:
-    radial-gradient(circle at 12% 22%, rgba(255,255,255,0.35) 0 2px, transparent 3px),
-    radial-gradient(circle at 78% 18%, rgba(255,255,255,0.28) 0 1.5px, transparent 2.5px),
-    radial-gradient(circle at 55% 72%, rgba(255,255,255,0.3) 0 2px, transparent 3px),
-    radial-gradient(circle at 88% 58%, rgba(255,220,180,0.4) 0 3px, transparent 4px),
-    radial-gradient(circle at 22% 68%, rgba(255,255,255,0.22) 0 1.5px, transparent 2.5px),
-    radial-gradient(circle at 40% 12%, rgba(232,180,120,0.35) 0 2.5px, transparent 3.5px);
-  background-size: 100% 100%;
-  opacity: 0.9;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 46%;
+  z-index: 0;
 }
 
-.memorial-hero::after {
-  position: absolute;
-  z-index: 1;
-  inset: 0;
+.hero-left::after {
   content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
   background:
-    linear-gradient(105deg, rgba(250, 240, 210, 0.82) 0%, rgba(250, 240, 210, 0.45) 42%, transparent 68%),
-    linear-gradient(0deg, rgba(212, 180, 90, 0.22) 0%, transparent 28%);
+    linear-gradient(90deg, rgb(22 35 27 / 72%) 0%, rgb(25 37 29 / 42%) 48%, rgb(29 40 31 / 12%) 100%),
+    linear-gradient(0deg, rgb(20 29 24 / 28%), transparent 38%);
   pointer-events: none;
 }
 
 .hero-copy {
   position: relative;
-  z-index: 3;
-  width: min(750px, 78vw);
-  margin-left: clamp(32px, 12vw, 180px);
-  padding: 70px 0 86px;
+  z-index: 2;
+  width: min(640px, 86%);
+  margin-left: clamp(28px, 8vw, 100px);
+  padding: 64px 0 80px;
   animation: appear 750ms ease-out both;
 }
 
-.portrait-wrap {
-  position: absolute;
-  z-index: 2;
-  top: 50%;
-  right: clamp(38px, 9vw, 135px);
-  width: clamp(190px, 26vw, 360px);
-  aspect-ratio: 1;
+.hero-right {
+  position: relative;
+  min-height: min(720px, 84svh);
+  background: #2a3830;
   overflow: hidden;
-  transform: translateY(-50%);
-  border: 6px solid rgba(255, 252, 240, 0.95);
-  border-radius: 50%;
-  background: #f5ead0;
-  box-shadow:
-    0 18px 50px rgba(120, 80, 30, 0.28),
-    0 0 0 1px rgba(212, 168, 75, 0.35),
-    0 0 0 12px rgba(255, 255, 255, 0.18);
 }
 
 .memorial-portrait {
@@ -135,32 +98,24 @@ button, a { -webkit-tap-highlight-color: transparent; }
   object-position: center top;
 }
 
-.portrait-wrap:not([hidden]) ~ .hero-copy {
-  width: min(750px, 52vw);
-}
-
-.hero-secondary-photo {
-  display: none;
-}
-
 .eyebrow { margin: 0 0 17px; color: var(--rose); font-size: 10px; font-weight: 700; letter-spacing: .19em; text-transform: uppercase; }
-.hero-eyebrow { color: #9a5c48; }
+.hero-eyebrow { color: #e7c4b7; }
 
 .hero-copy h1, .invitation-copy h2, .admin-heading h1 { margin: 0; font-family: var(--serif); font-weight: 400; letter-spacing: 0; }
-.hero-copy h1 { max-width: 680px; font-size: clamp(46px, 7.2vw, 88px); line-height: 1.06; color: #2a3026; text-shadow: 0 1px 0 rgba(255,255,255,0.35); }
-.hero-copy h1 .memorial-name { display: block; margin-top: 13px; font-size: clamp(28px, 3.8vw, 48px); line-height: 1.2; color: #3a4538; }
-.hero-description { max-width: 410px; margin: 22px 0 0; color: #4a5448; font-size: 15px; }
+.hero-copy h1 { max-width: 620px; font-size: clamp(42px, 5.8vw, 78px); line-height: 1.06; }
+.hero-copy h1 .memorial-name { display: block; margin-top: 12px; font-size: clamp(26px, 3.2vw, 42px); line-height: 1.2; }
+.hero-description { max-width: 380px; margin: 20px 0 0; color: rgb(255 255 255 / 88%); font-size: 15px; }
 .hero-link {
   display: inline-flex; gap: 15px; align-items: center;
-  margin-top: 34px; padding: 13px 0 8px;
-  border-bottom: 1px solid rgba(58, 69, 56, 0.45);
-  color: #2a3026; text-decoration: none; font-size: 12px; font-weight: 600;
+  margin-top: 32px; padding: 13px 0 8px;
+  border-bottom: 1px solid rgb(255 255 255 / 65%);
+  color: white; text-decoration: none; font-size: 12px; font-weight: 600;
 }
-.hero-link span { color: var(--rose); }
+.hero-link span { color: #e7c4b7; }
 .hero-caption {
-  position: absolute; z-index: 3;
-  right: clamp(24px, 6.5vw, 100px); bottom: 23px;
-  margin: 0; color: #5a5040; font-family: var(--serif); font-size: 14px; font-style: italic;
+  position: absolute; z-index: 2;
+  left: clamp(28px, 8vw, 100px); bottom: 22px;
+  margin: 0; color: rgb(255 255 255 / 78%); font-family: var(--serif); font-size: 14px; font-style: italic;
 }
 
 .invitation { display: grid; grid-template-columns: minmax(250px, .83fr) minmax(320px, 1fr); gap: clamp(50px, 11vw, 150px); width: min(1100px, calc(100% - 48px)); margin: 0 auto; padding: 112px 0 105px; }
@@ -176,7 +131,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .wall-heading h2 { margin: 0; font-family: var(--serif); font-size: 38px; font-weight: 400; line-height: 1.2; }
 .wall-heading > p:last-child { max-width: 310px; margin: 14px 0 0; color: var(--muted); font-size: 12px; }
 .published-tributes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; align-content: start; }
-.published-tribute { min-width: 0; padding: 20px 21px; border: 1px solid #e5deca; background: rgb(255 255 255 / 55%); }
+.published-tribute { min-width: 0; padding: 20px 21px; border: 1px solid #deded5; background: rgb(255 255 255 / 55%); }
 .published-tribute > p:first-child { margin: 0; color: #455149; font-family: var(--serif); font-size: 16px; line-height: 1.7; overflow-wrap: anywhere; white-space: pre-wrap; }
 .published-tribute .tribute-attribution { margin: 16px 0 0; color: var(--green); font-size: 11px; font-weight: 700; }
 .published-tribute time { display: block; margin-top: 2px; color: var(--muted); font-size: 10px; }
@@ -229,8 +184,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .tribute-entry > p { margin: 17px 0 0; color: #505b53; font-size: 13px; line-height: 1.75; white-space: pre-wrap; overflow-wrap: anywhere; }
 .empty-state { grid-column: 1 / -1; padding: 28px; border: 1px solid var(--rule); color: var(--muted); font-size: 13px; text-align: center; }
 .portrait-settings { display: flex; align-items: center; gap: 21px; margin-bottom: 30px; padding: 20px 22px; border: 1px solid var(--rule); background: rgb(255 255 255 / 42%); }
-.portrait-current { flex: 0 0 auto; width: 66px; aspect-ratio: 1; overflow: hidden; border: 2px solid white; border-radius: 50%; background: var(--paper-deep); box-shadow: 0 0 0 1px var(--rule); }
-.portrait-current img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.portrait-current { flex: 0 0 auto; width: 72px; aspect-ratio: 4 / 5; overflow: hidden; border: 2px solid white; border-radius: 2px; background: var(--paper-deep); box-shadow: 0 0 0 1px var(--rule); }
+.portrait-current img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center top; }
 .portrait-copy { flex: 1; min-width: 0; }
 .portrait-copy .eyebrow { margin-bottom: 2px; }
 .portrait-copy h2 { margin: 0; font-family: var(--serif); font-size: 21px; font-weight: 400; }
@@ -248,7 +203,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .crop-dialog-header h2 { margin: 0; font-family: var(--serif); font-size: 27px; font-weight: 400; }
 .crop-stage { width: min(100%, 500px); height: min(55svh, 500px); margin: 0 auto; overflow: hidden; background: #e8e5dd; }
 .crop-stage img { display: block; max-width: 100%; }
-.cropper-view-box, .cropper-face { border-radius: 50%; }
+.cropper-view-box, .cropper-face { border-radius: 0; }
 .crop-controls { display: flex; justify-content: center; gap: 9px; margin-top: 14px; }
 .crop-control { min-width: 40px; height: 38px; padding: 0 12px; border: 1px solid var(--rule); border-radius: 2px; background: transparent; color: var(--green); cursor: pointer; font-size: 18px; line-height: 1; }
 .crop-control:hover { border-color: var(--green); background: #edf0eb; }
@@ -258,20 +213,18 @@ button, a { -webkit-tap-highlight-color: transparent; }
 
 @keyframes appear { from { opacity: 0; transform: translateY(13px); } to { opacity: 1; transform: translateY(0); } }
 
+@media (max-width: 900px) {
+  .memorial-hero.has-portrait { grid-template-columns: 1fr; }
+  .hero-right { min-height: min(420px, 52svh); order: -1; }
+  .hero-left { min-height: min(560px, 68svh); }
+  .hero-copy { margin-left: 24px; margin-right: 24px; width: auto; padding: 48px 0 72px; }
+  .hero-copy h1 { font-size: clamp(38px, 9vw, 58px); }
+  .hero-copy h1 .memorial-name { font-size: clamp(24px, 6vw, 34px); }
+  .hero-caption { left: 24px; bottom: 18px; font-size: 13px; }
+}
+
 @media (max-width: 720px) {
   .site-header, .site-footer { padding-right: 22px; padding-left: 22px; }
-  .memorial-hero { min-height: 640px; min-height: min(720px, 82svh); align-items: end; }
-  .memorial-hero::after {
-    background: linear-gradient(0deg, rgba(250, 240, 210, 0.92) 0%, rgba(250, 240, 210, 0.55) 42%, transparent 72%);
-  }
-  .hero-copy { width: auto; margin: 0; padding: 0 26px 110px; }
-  .hero-copy h1 { max-width: 490px; font-size: clamp(44px, 11vw, 68px); }
-  .hero-description { max-width: 340px; font-size: 14px; }
-  .hero-caption { right: 22px; bottom: 22px; max-width: 220px; font-size: 12px; text-align: right; }
-  .portrait-wrap { top: 28px; right: 22px; width: clamp(124px, 38vw, 178px); transform: none; border-width: 5px; }
-  .portrait-wrap:not([hidden]) ~ .hero-copy { width: auto; padding-bottom: 110px; }
-  .portrait-wrap:not([hidden]) ~ .hero-copy h1 { max-width: 360px; font-size: clamp(40px, 9.5vw, 58px); }
-  .hero-copy h1 .memorial-name { font-size: clamp(26px, 6.5vw, 36px); }
   .tribute-wall { grid-template-columns: 1fr; gap: 29px; padding: 58px 22px 65px; }
   .wall-heading h2 { font-size: 34px; }
   .published-tributes { grid-template-columns: 1fr; }

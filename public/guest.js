@@ -3,6 +3,7 @@ const tributeMessage = document.querySelector('#tribute-message');
 const characterCount = document.querySelector('#character-count');
 const formStatus = document.querySelector('#form-status');
 const memorialName = document.querySelector('#memorial-name');
+const memorialHero = document.querySelector('#memorial-hero');
 const portraitWrap = document.querySelector('#portrait-wrap');
 const portraitImage = document.querySelector('#portrait-image');
 const publishedTributes = document.querySelector('#published-tributes');
@@ -53,6 +54,7 @@ fetch('/api/config')
       portraitImage.src = portraitUrl || '/images/her-portrait.jpg';
       portraitImage.alt = `Portrait of ${name || 'her'}`;
       portraitWrap.hidden = false;
+      memorialHero?.classList.add('has-portrait');
     }
   })
   .catch(() => {});
