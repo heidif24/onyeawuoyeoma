@@ -281,19 +281,19 @@ async function handler(request, response) {
       return respond(response, 200, { tributes: result.map(jsonTribute) });
     }
 
-    const statusRoute = path.match(/^\/api\/admin\/tributes\/(\d+)$/);
-    if (request.method === 'PATCH' && statusRoute) {
+    if (request.method === 'PATCH' && path === '/api/admin/tribute-status') {
       const body = await readJson(request);
       if (body.status !== 'pending' && body.status !== 'published') {
         return respond(response, 400, { error: 'Choose whether to publish this tribute.' });
       }
+      if (!/^\d+$/.test(String(body.id))) return respond(response, 400, { error: 'Choose a valid tribute.' });
       const query = await ensureSchema();
-      const result = await query('SELECT public_consent FROM tributes WHERE id = $1', [statusRoute[1]]);
+      const result = await query('SELECT public_consent FROM tributes WHERE id = $1', [body.id]);
       if (!result.length) return respond(response, 404, { error: 'Tribute not found.' });
       if (body.status === 'published' && result[0].public_consent !== true) {
         return respond(response, 403, { error: 'This writer did not give permission for public display.' });
       }
-      await query('UPDATE tributes SET status = $1 WHERE id = $2', [body.status, statusRoute[1]]);
+      await query('UPDATE tributes SET status = $1 WHERE id = $2', [body.status, body.id]);
       return respond(response, 200, { message: 'Tribute status updated.' });
     }
 

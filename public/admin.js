@@ -140,10 +140,10 @@ tributeList.addEventListener('click', async (event) => {
   dashboardStatus.textContent = 'Updating tribute...';
   dashboardStatus.classList.remove('is-error');
   try {
-    const response = await fetch(`/api/admin/tributes/${button.dataset.tributeId}`, {
+    const response = await fetch('/api/admin/tribute-status', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: button.dataset.nextStatus }),
+      body: JSON.stringify({ id: button.dataset.tributeId, status: button.dataset.nextStatus }),
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || 'Tribute status could not be updated.');
