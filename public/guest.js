@@ -4,8 +4,7 @@ const characterCount = document.querySelector('#character-count');
 const formStatus = document.querySelector('#form-status');
 const memorialName = document.querySelector('#memorial-name');
 const memorialHero = document.querySelector('#memorial-hero');
-const portraitWrap = document.querySelector('#portrait-wrap');
-const portraitImage = document.querySelector('#portrait-image');
+const heroCollage = document.querySelector('#hero-collage');
 const publishedTributes = document.querySelector('#published-tributes');
 
 async function readApiResponse(response) {
@@ -13,6 +12,28 @@ async function readApiResponse(response) {
     throw new Error(`Tribute service unavailable (HTTP ${response.status}). Please try again later.`);
   }
   return response.json();
+}
+
+function renderCollage(collage) {
+  if (!heroCollage || !memorialHero) return;
+  heroCollage.replaceChildren();
+  const items = Array.isArray(collage) ? collage.filter((c) => c?.url) : [];
+  memorialHero.dataset.count = String(items.length);
+  if (!items.length) {
+    memorialHero.classList.remove('has-collage');
+    return;
+  }
+  memorialHero.classList.add('has-collage');
+  for (const item of items) {
+    const cell = document.createElement('div');
+    cell.className = 'collage-cell';
+    const img = document.createElement('img');
+    img.src = item.url;
+    img.alt = '';
+    img.loading = items.indexOf(item) === 0 ? 'eager' : 'lazy';
+    cell.append(img);
+    heroCollage.append(cell);
+  }
 }
 
 function renderPublishedTributes(tributes) {
@@ -45,16 +66,15 @@ function renderPublishedTributes(tributes) {
 
 fetch('/api/config')
   .then(readApiResponse)
-  .then(({ memorialName: name, portraitAvailable, portraitUrl }) => {
+  .then(({ memorialName: name, collage, portraitUrl }) => {
     if (name) {
       memorialName.textContent = name;
       document.title = `In Loving Memory of ${name}`;
     }
-    if (portraitAvailable) {
-      portraitImage.src = portraitUrl || '/images/her-portrait.jpg';
-      portraitImage.alt = `Portrait of ${name || 'her'}`;
-      portraitWrap.hidden = false;
-      memorialHero?.classList.add('has-portrait');
+    if (Array.isArray(collage) && collage.length) {
+      renderCollage(collage);
+    } else if (portraitUrl) {
+      renderCollage([{ slot: 1, url: portraitUrl }]);
     }
   })
   .catch(() => {});
