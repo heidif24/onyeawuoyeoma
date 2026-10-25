@@ -5,16 +5,18 @@ const dashboard = document.querySelector('#admin-dashboard');
 const dashboardStatus = document.querySelector('#dashboard-status');
 const tributeList = document.querySelector('#tribute-list');
 const tributeCount = document.querySelector('#tribute-count');
-const portraitCurrent = document.querySelector('#portrait-current');
-const portraitThumbnail = document.querySelector('#portrait-thumbnail');
-const portraitStatus = document.querySelector('#portrait-status');
-const portraitFile = document.querySelector('#portrait-file');
+const collageSlots = document.querySelector('#collage-slots');
+const collageStatus = document.querySelector('#collage-status');
+const collageFile = document.querySelector('#collage-file');
 const cropDialog = document.querySelector('#crop-dialog');
 const cropImage = document.querySelector('#crop-image');
 const cropStatus = document.querySelector('#crop-status');
 const saveCropButton = document.querySelector('#save-crop');
+
 let cropper;
 let cropSource;
+let activeSlot = null;
+let currentCollage = [];
 
 async function readApiResponse(response) {
   if (!response.headers.get('content-type')?.includes('application/json')) {
@@ -23,25 +25,77 @@ async function readApiResponse(response) {
   return response.json();
 }
 
-function showPortrait(url) {
-  portraitThumbnail.src = `${url}?v=${Date.now()}`;
-  portraitCurrent.hidden = false;
-  portraitStatus.textContent = 'Her photo fills the right half of the lily hero as a large portrait panel.';
+function renderCollageSlots(collage) {
+  currentCollage = Array.isArray(collage) ? collage : [];
+  const bySlot = {};
+  for (const item of currentCollage) bySlot[item.slot] = item.url;
+
+  collageSlots.replaceChildren();
+  for (let slot = 1; slot <= 5; slot += 1) {
+    const el = document.createElement('div');
+    el.className = 'collage-slot' + (bySlot[slot] ? ' has-photo' : '');
+    el.dataset.slot = String(slot);
+
+    const label = document.createElement('span');
+    label.className = 'slot-label';
+    label.textContent = 'Photo ' + slot;
+    el.append(label);
+
+    if (bySlot[slot]) {
+      const img = document.createElement('img');
+      img.src = bySlot[slot] + '?v=' + Date.now();
+      img.alt = 'Collage photo ' + slot;
+      el.append(img);
+    }
+
+    const actions = document.createElement('div');
+    actions.className = 'slot-actions';
+
+    const replaceBtn = document.createElement('button');
+    replaceBtn.type = 'button';
+    replaceBtn.className = 'slot-btn';
+    replaceBtn.dataset.action = 'upload';
+    replaceBtn.dataset.slot = String(slot);
+    replaceBtn.textContent = bySlot[slot] ? 'Replace' : 'Add';
+    actions.append(replaceBtn);
+
+    if (bySlot[slot]) {
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'slot-btn slot-btn-danger';
+      removeBtn.dataset.action = 'remove';
+      removeBtn.dataset.slot = String(slot);
+      removeBtn.textContent = 'Remove';
+      actions.append(removeBtn);
+    }
+    el.append(actions);
+
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'slot-add';
+    addBtn.dataset.action = 'upload';
+    addBtn.dataset.slot = String(slot);
+    addBtn.textContent = 'Add photo';
+    el.append(addBtn);
+
+    collageSlots.append(el);
+  }
+
+  const filled = currentCollage.length;
+  collageStatus.textContent = filled
+    ? filled + ' of 5 photos in the hero collage.'
+    : 'No photos yet — add up to 5 for a beautiful collage on the memorial page.';
+  collageStatus.classList.remove('is-error');
 }
 
-async function loadPortrait() {
+async function loadCollage() {
   const response = await fetch('/api/config');
-  const { portraitAvailable, portraitUrl } = await readApiResponse(response);
-  if (portraitAvailable) {
-    showPortrait(portraitUrl || '/images/her-portrait.jpg');
-  } else {
-    portraitCurrent.hidden = true;
-    portraitStatus.textContent = 'No portrait yet. Choose a photo — it will appear large on the right half of the hero.';
-  }
+  const data = await readApiResponse(response);
+  renderCollageSlots(data.collage || (data.portraitUrl ? [{ slot: 1, url: data.portraitUrl }] : []));
 }
 
 function renderTributes(tributes) {
-  tributeCount.textContent = `${tributes.length} ${tributes.length === 1 ? 'tribute' : 'tributes'} received`;
+  tributeCount.textContent = tributes.length + ' ' + (tributes.length === 1 ? 'tribute' : 'tributes') + ' received';
   tributeList.replaceChildren();
 
   if (!tributes.length) {
@@ -60,7 +114,7 @@ function renderTributes(tributes) {
     heading.textContent = tribute.name;
     const date = document.createElement('time');
     date.dateTime = tribute.createdAt;
-    date.textContent = new Date(`${tribute.createdAt.replace(' ', 'T')}Z`).toLocaleDateString(undefined, {
+    date.textContent = new Date(tribute.createdAt.replace(' ', 'T') + 'Z').toLocaleDateString(undefined, {
       year: 'numeric', month: 'long', day: 'numeric',
     });
     const message = document.createElement('p');
@@ -93,7 +147,7 @@ async function showDashboard() {
   const result = await readApiResponse(response);
   if (!response.ok) throw new Error(result.error || 'Tributes could not be loaded.');
   renderTributes(result.tributes);
-  await loadPortrait();
+  await loadCollage();
   loginSection.hidden = true;
   dashboard.hidden = false;
   return true;
@@ -166,16 +220,45 @@ tributeList.addEventListener('click', async (event) => {
   }
 });
 
-portraitFile.addEventListener('change', () => {
-  const file = portraitFile.files[0];
-  portraitFile.value = '';
-  if (!file) return;
+collageSlots.addEventListener('click', async (event) => {
+  const btn = event.target.closest('[data-action]');
+  if (!btn) return;
+  const slot = Number(btn.dataset.slot);
+  if (btn.dataset.action === 'upload') {
+    activeSlot = slot;
+    collageFile.click();
+    return;
+  }
+  if (btn.dataset.action === 'remove') {
+    btn.disabled = true;
+    collageStatus.textContent = 'Removing photo...';
+    try {
+      const response = await fetch('/api/admin/collage?slot=' + slot, { method: 'DELETE' });
+      const result = await readApiResponse(response);
+      if (!response.ok) throw new Error(result.error || 'Could not remove photo.');
+      renderCollageSlots(result.collage);
+      dashboardStatus.textContent = 'Photo ' + slot + ' removed from the collage.';
+      dashboardStatus.classList.remove('is-error');
+    } catch (error) {
+      collageStatus.textContent = error.message || 'Could not remove photo.';
+      collageStatus.classList.add('is-error');
+      btn.disabled = false;
+    }
+  }
+});
+
+collageFile.addEventListener('change', () => {
+  const file = collageFile.files[0];
+  collageFile.value = '';
+  if (!file || !activeSlot) return;
   if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-    portraitStatus.textContent = 'Choose a JPEG, PNG, or WebP image.';
+    collageStatus.textContent = 'Choose a JPEG, PNG, or WebP image.';
+    collageStatus.classList.add('is-error');
     return;
   }
   if (file.size > 20 * 1024 * 1024) {
-    portraitStatus.textContent = 'This photo is over 20 MB. Choose a smaller image.';
+    collageStatus.textContent = 'This photo is over 20 MB. Choose a smaller image.';
+    collageStatus.classList.add('is-error');
     return;
   }
 
@@ -196,7 +279,8 @@ portraitFile.addEventListener('change', () => {
     cropDialog.showModal();
   };
   cropImage.onerror = () => {
-    portraitStatus.textContent = 'This photo could not be opened. Try another image.';
+    collageStatus.textContent = 'This photo could not be opened. Try another image.';
+    collageStatus.classList.add('is-error');
     URL.revokeObjectURL(cropSource);
   };
   cropImage.src = cropSource;
@@ -216,9 +300,10 @@ cropDialog.addEventListener('close', () => {
 });
 
 saveCropButton.addEventListener('click', () => {
+  if (!activeSlot) return;
   const canvas = cropper?.getCroppedCanvas({
-    width: 1400,
-    height: 1750,
+    width: 1200,
+    height: 1500,
     fillColor: '#ffffff',
     imageSmoothingEnabled: true,
     imageSmoothingQuality: 'high',
@@ -226,26 +311,25 @@ saveCropButton.addEventListener('click', () => {
   if (!canvas) return;
 
   saveCropButton.disabled = true;
-  cropStatus.textContent = 'Saving her photo...';
+  cropStatus.textContent = 'Saving photo...';
   canvas.toBlob(async (image) => {
     try {
       if (!image) throw new Error('The crop could not be prepared. Please try again.');
-      const response = await fetch('/api/admin/portrait', {
+      const response = await fetch('/api/admin/collage?slot=' + activeSlot, {
         method: 'POST',
         headers: { 'Content-Type': 'image/jpeg' },
         body: image,
       });
       const result = await readApiResponse(response);
-      if (!response.ok) throw new Error(result.error || 'The portrait could not be saved.');
-      showPortrait(result.portraitUrl || '/images/her-portrait.jpg');
-      portraitStatus.textContent = 'Her photo now fills the right half of the lily hero.';
-      dashboardStatus.textContent = 'Memorial portrait updated.';
+      if (!response.ok) throw new Error(result.error || 'The photo could not be saved.');
+      renderCollageSlots(result.collage);
+      dashboardStatus.textContent = 'Photo ' + activeSlot + ' saved to the collage.';
       dashboardStatus.classList.remove('is-error');
       cropDialog.close();
     } catch (error) {
-      cropStatus.textContent = error.message || 'The portrait could not be saved.';
+      cropStatus.textContent = error.message || 'The photo could not be saved.';
     } finally {
       saveCropButton.disabled = false;
     }
-  }, 'image/jpeg', 0.92);
+  }, 'image/jpeg', 0.9);
 });
