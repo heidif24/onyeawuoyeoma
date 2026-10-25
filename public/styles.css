@@ -29,82 +29,108 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .site-footer { border-top: 1px solid var(--rule); color: var(--muted); font-size: 11px; }
 .site-footer a:hover, .header-link:hover { color: var(--green); }
 
-/* ——— Split lily + large portrait hero ——— */
+/* ——— Creative photo collage hero ——— */
 .memorial-hero {
   position: relative;
-  display: grid;
-  grid-template-columns: 1fr;
-  min-height: min(720px, 84svh);
+  min-height: min(760px, 88svh);
   overflow: hidden;
   isolation: isolate;
-  background: #37483c;
+  background: #2c3a32;
   color: white;
 }
 
-.memorial-hero.has-portrait {
-  grid-template-columns: 1fr 1fr;
-}
-
-.hero-left {
-  position: relative;
-  min-height: min(720px, 84svh);
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-}
-
-.memorial-image {
+.hero-fallback {
   position: absolute;
   inset: 0;
+  z-index: 0;
+}
+.memorial-image {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center 46%;
-  z-index: 0;
 }
+.memorial-hero.has-collage .hero-fallback { display: none; }
 
-.hero-left::after {
-  content: '';
+.hero-collage {
   position: absolute;
   inset: 0;
-  z-index: 1;
-  background:
-    linear-gradient(90deg, rgb(22 35 27 / 72%) 0%, rgb(25 37 29 / 42%) 48%, rgb(29 40 31 / 12%) 100%),
-    linear-gradient(0deg, rgb(20 29 24 / 28%), transparent 38%);
-  pointer-events: none;
+  z-index: 0;
+  display: none;
+  gap: 6px;
+  padding: 6px;
+  background: #1e2a24;
 }
+.memorial-hero.has-collage .hero-collage { display: grid; }
 
-.hero-copy {
-  position: relative;
-  z-index: 2;
-  width: min(640px, 86%);
-  margin-left: clamp(28px, 8vw, 100px);
-  padding: 64px 0 80px;
-  animation: appear 750ms ease-out both;
-}
-
-.hero-right {
-  position: relative;
-  min-height: min(720px, 84svh);
-  background: #2a3830;
-  overflow: hidden;
-}
-
-.memorial-portrait {
+.hero-collage img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center top;
+  border-radius: 2px;
+}
+
+.memorial-hero[data-count="1"] .hero-collage {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+}
+.memorial-hero[data-count="2"] .hero-collage {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr;
+}
+.memorial-hero[data-count="3"] .hero-collage {
+  grid-template-columns: 1.35fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+.memorial-hero[data-count="3"] .hero-collage .collage-cell:nth-child(1) {
+  grid-row: 1 / 3;
+}
+.memorial-hero[data-count="4"] .hero-collage {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+.memorial-hero[data-count="5"] .hero-collage {
+  grid-template-columns: 1.4fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+.memorial-hero[data-count="5"] .hero-collage .collage-cell:nth-child(1) {
+  grid-row: 1 / 3;
+}
+
+.hero-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(105deg, rgb(18 28 22 / 78%) 0%, rgb(22 34 27 / 48%) 38%, rgb(24 36 29 / 18%) 62%, transparent 82%),
+    linear-gradient(0deg, rgb(16 24 20 / 45%) 0%, transparent 42%);
+}
+.memorial-hero.has-collage .hero-veil {
+  background:
+    linear-gradient(105deg, rgb(14 22 18 / 82%) 0%, rgb(18 28 22 / 55%) 36%, rgb(20 30 24 / 22%) 58%, transparent 78%),
+    linear-gradient(0deg, rgb(12 20 16 / 50%) 0%, transparent 38%);
+}
+
+.hero-copy {
+  position: relative;
+  z-index: 2;
+  width: min(620px, 86%);
+  margin-left: clamp(28px, 8vw, 100px);
+  padding: 72px 0 100px;
+  animation: appear 750ms ease-out both;
 }
 
 .eyebrow { margin: 0 0 17px; color: var(--rose); font-size: 10px; font-weight: 700; letter-spacing: .19em; text-transform: uppercase; }
 .hero-eyebrow { color: #e7c4b7; }
 
 .hero-copy h1, .invitation-copy h2, .admin-heading h1 { margin: 0; font-family: var(--serif); font-weight: 400; letter-spacing: 0; }
-.hero-copy h1 { max-width: 620px; font-size: clamp(42px, 5.8vw, 78px); line-height: 1.06; }
+.hero-copy h1 { max-width: 600px; font-size: clamp(42px, 5.8vw, 78px); line-height: 1.06; text-shadow: 0 2px 24px rgb(0 0 0 / 35%); }
 .hero-copy h1 .memorial-name { display: block; margin-top: 12px; font-size: clamp(26px, 3.2vw, 42px); line-height: 1.2; }
-.hero-description { max-width: 380px; margin: 20px 0 0; color: rgb(255 255 255 / 88%); font-size: 15px; }
+.hero-description { max-width: 380px; margin: 20px 0 0; color: rgb(255 255 255 / 90%); font-size: 15px; }
 .hero-link {
   display: inline-flex; gap: 15px; align-items: center;
   margin-top: 32px; padding: 13px 0 8px;
@@ -183,15 +209,100 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .tribute-entry time { display: block; margin-top: 4px; color: var(--muted); font-size: 10px; }
 .tribute-entry > p { margin: 17px 0 0; color: #505b53; font-size: 13px; line-height: 1.75; white-space: pre-wrap; overflow-wrap: anywhere; }
 .empty-state { grid-column: 1 / -1; padding: 28px; border: 1px solid var(--rule); color: var(--muted); font-size: 13px; text-align: center; }
-.portrait-settings { display: flex; align-items: center; gap: 21px; margin-bottom: 30px; padding: 20px 22px; border: 1px solid var(--rule); background: rgb(255 255 255 / 42%); }
-.portrait-current { flex: 0 0 auto; width: 72px; aspect-ratio: 4 / 5; overflow: hidden; border: 2px solid white; border-radius: 2px; background: var(--paper-deep); box-shadow: 0 0 0 1px var(--rule); }
-.portrait-current img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center top; }
-.portrait-copy { flex: 1; min-width: 0; }
-.portrait-copy .eyebrow { margin-bottom: 2px; }
-.portrait-copy h2 { margin: 0; font-family: var(--serif); font-size: 21px; font-weight: 400; }
-.portrait-copy > p:last-child { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
-.portrait-select { flex: 0 0 auto; cursor: pointer; }
+
+.collage-settings {
+  margin-bottom: 34px;
+  padding: 22px 24px 20px;
+  border: 1px solid var(--rule);
+  background: rgb(255 255 255 / 42%);
+}
+.collage-settings .eyebrow { margin-bottom: 4px; }
+.collage-settings h2 { margin: 0 0 6px; font-family: var(--serif); font-size: 22px; font-weight: 400; }
+.collage-intro { margin: 0 0 18px; color: var(--muted); font-size: 12px; max-width: 520px; }
+.collage-slots {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+.collage-slot {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  border: 1px dashed #c8c2b0;
+  border-radius: 3px;
+  background: var(--paper-deep);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.collage-slot.has-photo {
+  border-style: solid;
+  border-color: var(--rule);
+}
+.collage-slot img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+.collage-slot .slot-label {
+  position: relative;
+  z-index: 1;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.collage-slot.has-photo .slot-label { display: none; }
+.collage-slot .slot-actions {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  padding: 8px;
+  background: linear-gradient(0deg, rgb(20 28 24 / 72%) 0%, transparent 55%);
+  opacity: 0;
+  transition: opacity 160ms;
+}
+.collage-slot:hover .slot-actions,
+.collage-slot:focus-within .slot-actions { opacity: 1; }
+.collage-slot .slot-btn {
+  min-height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 2px;
+  background: white;
+  color: var(--green);
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.collage-slot .slot-btn-danger { background: #f5e8e6; color: #a4473e; }
+.collage-slot .slot-add {
+  position: relative;
+  z-index: 1;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--green);
+  border-radius: 2px;
+  background: var(--green);
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.collage-slot.has-photo .slot-add { display: none; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }
+
 .tribute-status { display: inline-block; margin-top: 10px; padding: 2px 8px; border-radius: 2px; background: #ecefe9; color: var(--green); font-size: 10px; font-weight: 600; }
 .tribute-entry[data-status='published'] .tribute-status { background: #e7eee8; }
 .tribute-publish-button { display: block; margin: 16px 0 0; padding: 0; color: var(--green); font-weight: 600; }
@@ -214,17 +325,31 @@ button, a { -webkit-tap-highlight-color: transparent; }
 @keyframes appear { from { opacity: 0; transform: translateY(13px); } to { opacity: 1; transform: translateY(0); } }
 
 @media (max-width: 900px) {
-  .memorial-hero.has-portrait { grid-template-columns: 1fr; }
-  .hero-right { min-height: min(420px, 52svh); order: -1; }
-  .hero-left { min-height: min(560px, 68svh); }
-  .hero-copy { margin-left: 24px; margin-right: 24px; width: auto; padding: 48px 0 72px; }
+  .memorial-hero { min-height: min(680px, 86svh); }
+  .hero-copy { margin-left: 24px; margin-right: 24px; width: auto; padding: 56px 0 88px; }
   .hero-copy h1 { font-size: clamp(38px, 9vw, 58px); }
   .hero-copy h1 .memorial-name { font-size: clamp(24px, 6vw, 34px); }
   .hero-caption { left: 24px; bottom: 18px; font-size: 13px; }
+  .memorial-hero[data-count="5"] .hero-collage {
+    grid-template-columns: 1.2fr 1fr 1fr;
+  }
+  .collage-slots { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media (max-width: 720px) {
   .site-header, .site-footer { padding-right: 22px; padding-left: 22px; }
+  .memorial-hero[data-count="2"] .hero-collage,
+  .memorial-hero[data-count="3"] .hero-collage,
+  .memorial-hero[data-count="4"] .hero-collage,
+  .memorial-hero[data-count="5"] .hero-collage {
+    grid-template-columns: 1fr 1fr;
+  }
+  .memorial-hero[data-count="3"] .hero-collage .collage-cell:nth-child(1),
+  .memorial-hero[data-count="5"] .hero-collage .collage-cell:nth-child(1) {
+    grid-row: auto;
+    grid-column: 1 / -1;
+    min-height: 42vw;
+  }
   .tribute-wall { grid-template-columns: 1fr; gap: 29px; padding: 58px 22px 65px; }
   .wall-heading h2 { font-size: 34px; }
   .published-tributes { grid-template-columns: 1fr; }
@@ -240,9 +365,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
   .dashboard-toolbar { align-items: start; flex-direction: column; }
   .dashboard-actions { justify-content: start; }
   .tribute-list { grid-template-columns: 1fr; }
-  .portrait-settings { flex-wrap: wrap; gap: 14px; padding: 17px; }
-  .portrait-copy { flex-basis: calc(100% - 84px); }
-  .portrait-select { margin-left: 80px; }
+  .collage-slots { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .crop-dialog { padding: 18px; }
 }
 
