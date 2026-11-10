@@ -8,15 +8,25 @@ const tributeCount = document.querySelector('#tribute-count');
 const collageSlots = document.querySelector('#collage-slots');
 const collageStatus = document.querySelector('#collage-status');
 const collageFile = document.querySelector('#collage-file');
+const galleryAdminGrid = document.querySelector('#gallery-admin-grid');
+const galleryStatus = document.querySelector('#gallery-status');
+const galleryFile = document.querySelector('#gallery-file');
+const galleryAddButton = document.querySelector('#gallery-add-button');
 const cropDialog = document.querySelector('#crop-dialog');
 const cropImage = document.querySelector('#crop-image');
 const cropStatus = document.querySelector('#crop-status');
 const saveCropButton = document.querySelector('#save-crop');
+const cropTitle = document.querySelector('#crop-title');
+
+const COLLAGE_MAX = 4;
+const GALLERY_MAX = 100;
 
 let cropper;
 let cropSource;
 let activeSlot = null;
+let cropMode = 'collage';
 let currentCollage = [];
+let currentGallery = [];
 
 async function readApiResponse(response) {
   if (!response.headers.get('content-type')?.includes('application/json')) {
@@ -29,28 +39,23 @@ function renderCollageSlots(collage) {
   currentCollage = Array.isArray(collage) ? collage : [];
   const bySlot = {};
   for (const item of currentCollage) bySlot[item.slot] = item.url;
-
   collageSlots.replaceChildren();
-  for (let slot = 1; slot <= 5; slot += 1) {
+  for (let slot = 1; slot <= COLLAGE_MAX; slot += 1) {
     const el = document.createElement('div');
     el.className = 'collage-slot' + (bySlot[slot] ? ' has-photo' : '');
     el.dataset.slot = String(slot);
-
     const label = document.createElement('span');
     label.className = 'slot-label';
     label.textContent = 'Photo ' + slot;
     el.append(label);
-
     if (bySlot[slot]) {
       const img = document.createElement('img');
       img.src = bySlot[slot] + '?v=' + Date.now();
       img.alt = 'Collage photo ' + slot;
       el.append(img);
     }
-
     const actions = document.createElement('div');
     actions.className = 'slot-actions';
-
     const replaceBtn = document.createElement('button');
     replaceBtn.type = 'button';
     replaceBtn.className = 'slot-btn';
@@ -58,7 +63,6 @@ function renderCollageSlots(collage) {
     replaceBtn.dataset.slot = String(slot);
     replaceBtn.textContent = bySlot[slot] ? 'Replace' : 'Add';
     actions.append(replaceBtn);
-
     if (bySlot[slot]) {
       const removeBtn = document.createElement('button');
       removeBtn.type = 'button';
@@ -69,7 +73,6 @@ function renderCollageSlots(collage) {
       actions.append(removeBtn);
     }
     el.append(actions);
-
     const addBtn = document.createElement('button');
     addBtn.type = 'button';
     addBtn.className = 'slot-add';
@@ -77,27 +80,64 @@ function renderCollageSlots(collage) {
     addBtn.dataset.slot = String(slot);
     addBtn.textContent = 'Add photo';
     el.append(addBtn);
-
     collageSlots.append(el);
   }
-
   const filled = currentCollage.length;
   collageStatus.textContent = filled
-    ? filled + ' of 5 photos in the hero collage.'
-    : 'No photos yet — add up to 5 for a beautiful collage on the memorial page.';
+    ? filled + ' of ' + COLLAGE_MAX + ' photos in the hero collage.'
+    : 'No photos yet — add up to ' + COLLAGE_MAX + ' for a balanced collage on the memorial page.';
   collageStatus.classList.remove('is-error');
 }
 
-async function loadCollage() {
+function renderGalleryAdmin(gallery) {
+  currentGallery = Array.isArray(gallery) ? gallery : [];
+  galleryAdminGrid.replaceChildren();
+  if (!currentGallery.length) {
+    const empty = document.createElement('p');
+    empty.className = 'empty-state';
+    empty.textContent = 'No gallery photos yet. Use “Add photo” to begin the collection visitors see when they scan the QR code.';
+    galleryAdminGrid.append(empty);
+  } else {
+    for (const item of currentGallery) {
+      const el = document.createElement('div');
+      el.className = 'collage-slot has-photo gallery-admin-item';
+      el.dataset.slot = String(item.slot);
+      const img = document.createElement('img');
+      img.src = item.url + '?v=' + Date.now();
+      img.alt = 'Gallery photo ' + item.slot;
+      el.append(img);
+      const actions = document.createElement('div');
+      actions.className = 'slot-actions';
+      actions.style.opacity = '1';
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'slot-btn slot-btn-danger';
+      removeBtn.dataset.galleryAction = 'remove';
+      removeBtn.dataset.slot = String(item.slot);
+      removeBtn.textContent = 'Remove';
+      actions.append(removeBtn);
+      el.append(actions);
+      galleryAdminGrid.append(el);
+    }
+  }
+  const filled = currentGallery.length;
+  galleryStatus.textContent = filled
+    ? filled + ' of ' + GALLERY_MAX + ' gallery photographs.'
+    : 'Gallery is empty — add photos for the QR code page.';
+  galleryStatus.classList.remove('is-error');
+  if (galleryAddButton) galleryAddButton.disabled = filled >= GALLERY_MAX;
+}
+
+async function loadAssets() {
   const response = await fetch('/api/config');
   const data = await readApiResponse(response);
   renderCollageSlots(data.collage || (data.portraitUrl ? [{ slot: 1, url: data.portraitUrl }] : []));
+  renderGalleryAdmin(data.gallery || []);
 }
 
 function renderTributes(tributes) {
   tributeCount.textContent = tributes.length + ' ' + (tributes.length === 1 ? 'tribute' : 'tributes') + ' received';
   tributeList.replaceChildren();
-
   if (!tributes.length) {
     const emptyState = document.createElement('p');
     emptyState.className = 'empty-state';
@@ -105,7 +145,6 @@ function renderTributes(tributes) {
     tributeList.append(emptyState);
     return;
   }
-
   for (const tribute of tributes) {
     const article = document.createElement('article');
     article.className = 'tribute-entry';
@@ -147,7 +186,7 @@ async function showDashboard() {
   const result = await readApiResponse(response);
   if (!response.ok) throw new Error(result.error || 'Tributes could not be loaded.');
   renderTributes(result.tributes);
-  await loadCollage();
+  await loadAssets();
   loginSection.hidden = true;
   dashboard.hidden = false;
   return true;
@@ -165,7 +204,6 @@ loginForm.addEventListener('submit', async (event) => {
   submitButton.disabled = true;
   loginStatus.textContent = 'Signing in...';
   loginStatus.classList.remove('is-error');
-
   try {
     const response = await fetch('/api/admin/login', {
       method: 'POST',
@@ -220,11 +258,49 @@ tributeList.addEventListener('click', async (event) => {
   }
 });
 
+function openCropperForFile(file, statusEl) {
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+    statusEl.textContent = 'Choose a JPEG, PNG, or WebP image.';
+    statusEl.classList.add('is-error');
+    return;
+  }
+  if (file.size > 20 * 1024 * 1024) {
+    statusEl.textContent = 'This photo is over 20 MB. Choose a smaller image.';
+    statusEl.classList.add('is-error');
+    return;
+  }
+  cropSource = URL.createObjectURL(file);
+  cropImage.onload = () => {
+    cropper?.destroy();
+    const isGallery = cropMode === 'gallery';
+    cropper = new Cropper(cropImage, {
+      aspectRatio: isGallery ? 1 : 4 / 5,
+      viewMode: 1,
+      dragMode: 'move',
+      autoCropArea: 0.9,
+      background: false,
+      guides: true,
+      responsive: true,
+      restore: false,
+    });
+    if (cropTitle) cropTitle.textContent = isGallery ? 'Frame for the gallery' : 'Frame for the collage';
+    cropStatus.textContent = '';
+    cropDialog.showModal();
+  };
+  cropImage.onerror = () => {
+    statusEl.textContent = 'This photo could not be opened. Try another image.';
+    statusEl.classList.add('is-error');
+    URL.revokeObjectURL(cropSource);
+  };
+  cropImage.src = cropSource;
+}
+
 collageSlots.addEventListener('click', async (event) => {
   const btn = event.target.closest('[data-action]');
   if (!btn) return;
   const slot = Number(btn.dataset.slot);
   if (btn.dataset.action === 'upload') {
+    cropMode = 'collage';
     activeSlot = slot;
     collageFile.click();
     return;
@@ -251,39 +327,47 @@ collageFile.addEventListener('change', () => {
   const file = collageFile.files[0];
   collageFile.value = '';
   if (!file || !activeSlot) return;
-  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-    collageStatus.textContent = 'Choose a JPEG, PNG, or WebP image.';
-    collageStatus.classList.add('is-error');
-    return;
-  }
-  if (file.size > 20 * 1024 * 1024) {
-    collageStatus.textContent = 'This photo is over 20 MB. Choose a smaller image.';
-    collageStatus.classList.add('is-error');
-    return;
-  }
+  cropMode = 'collage';
+  openCropperForFile(file, collageStatus);
+});
 
-  cropSource = URL.createObjectURL(file);
-  cropImage.onload = () => {
-    cropper?.destroy();
-    cropper = new Cropper(cropImage, {
-      aspectRatio: 4 / 5,
-      viewMode: 1,
-      dragMode: 'move',
-      autoCropArea: 0.9,
-      background: false,
-      guides: true,
-      responsive: true,
-      restore: false,
-    });
-    cropStatus.textContent = '';
-    cropDialog.showModal();
-  };
-  cropImage.onerror = () => {
-    collageStatus.textContent = 'This photo could not be opened. Try another image.';
-    collageStatus.classList.add('is-error');
-    URL.revokeObjectURL(cropSource);
-  };
-  cropImage.src = cropSource;
+galleryAddButton?.addEventListener('click', () => {
+  if (currentGallery.length >= GALLERY_MAX) {
+    galleryStatus.textContent = 'Gallery is full (maximum ' + GALLERY_MAX + ' photos).';
+    galleryStatus.classList.add('is-error');
+    return;
+  }
+  cropMode = 'gallery';
+  activeSlot = null;
+  galleryFile.click();
+});
+
+galleryFile?.addEventListener('change', () => {
+  const file = galleryFile.files[0];
+  galleryFile.value = '';
+  if (!file) return;
+  cropMode = 'gallery';
+  openCropperForFile(file, galleryStatus);
+});
+
+galleryAdminGrid?.addEventListener('click', async (event) => {
+  const btn = event.target.closest('[data-gallery-action="remove"]');
+  if (!btn) return;
+  const slot = Number(btn.dataset.slot);
+  btn.disabled = true;
+  galleryStatus.textContent = 'Removing photo...';
+  try {
+    const response = await fetch('/api/admin/gallery?slot=' + slot, { method: 'DELETE' });
+    const result = await readApiResponse(response);
+    if (!response.ok) throw new Error(result.error || 'Could not remove photo.');
+    renderGalleryAdmin(result.gallery);
+    dashboardStatus.textContent = 'Gallery photo removed.';
+    dashboardStatus.classList.remove('is-error');
+  } catch (error) {
+    galleryStatus.textContent = error.message || 'Could not remove photo.';
+    galleryStatus.classList.add('is-error');
+    btn.disabled = false;
+  }
 });
 
 document.querySelector('#zoom-out').addEventListener('click', () => cropper?.zoom(-0.1));
@@ -300,30 +384,36 @@ cropDialog.addEventListener('close', () => {
 });
 
 saveCropButton.addEventListener('click', () => {
-  if (!activeSlot) return;
+  const isGallery = cropMode === 'gallery';
+  if (!isGallery && !activeSlot) return;
   const canvas = cropper?.getCroppedCanvas({
-    width: 1200,
-    height: 1500,
+    width: isGallery ? 1400 : 1200,
+    height: isGallery ? 1400 : 1500,
     fillColor: '#ffffff',
     imageSmoothingEnabled: true,
     imageSmoothingQuality: 'high',
   });
   if (!canvas) return;
-
   saveCropButton.disabled = true;
   cropStatus.textContent = 'Saving photo...';
   canvas.toBlob(async (image) => {
     try {
       if (!image) throw new Error('The crop could not be prepared. Please try again.');
-      const response = await fetch('/api/admin/collage?slot=' + activeSlot, {
+      const endpoint = isGallery ? '/api/admin/gallery' : '/api/admin/collage?slot=' + activeSlot;
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'image/jpeg' },
         body: image,
       });
       const result = await readApiResponse(response);
       if (!response.ok) throw new Error(result.error || 'The photo could not be saved.');
-      renderCollageSlots(result.collage);
-      dashboardStatus.textContent = 'Photo ' + activeSlot + ' saved to the collage.';
+      if (isGallery) {
+        renderGalleryAdmin(result.gallery);
+        dashboardStatus.textContent = 'Photo added to the gallery.';
+      } else {
+        renderCollageSlots(result.collage);
+        dashboardStatus.textContent = 'Photo ' + activeSlot + ' saved to the collage.';
+      }
       dashboardStatus.classList.remove('is-error');
       cropDialog.close();
     } catch (error) {
