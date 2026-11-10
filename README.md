@@ -21,8 +21,10 @@ New tributes are private by default. Writers can separately consent to online di
 
 ## Family admin
 
-At `/admin`, sign in to change the portrait, review tributes, publish or unpublish messages, and download the full collection. Each tribute is private by default. Writers must separately opt in to online display, and the family must approve it before it appears below the hero. The print-attribution checkbox is separate.
+At `/admin`, sign in to manage the hero collage (up to 4 photos), the photo gallery (up to 100 photos), review tributes, publish or unpublish messages, and download the full collection. Each tribute is private by default. Writers must separately opt in to online display, and the family must approve it before it appears below the hero. The print-attribution checkbox is separate.
 
-To change the hero portrait, choose a JPEG, PNG, or WebP image in the portrait section. Drag to reposition, use the zoom and rotate controls, and save when the circular preview looks right. The cropped image is saved as `public/images/her-portrait.jpg`, layered over the existing flower photograph. Choose another image at any time to replace it. The original upload is not exposed to visitors; only the cropped JPEG is stored.
+The memorial homepage shows a QR code under the hero that opens `/gallery`, where visitors can browse all gallery photographs in a clean grid with a full-screen lightbox.
 
-The portrait is stored in Vercel Blob, and tribute records are stored in Postgres. On local development, the portrait and SQLite database are stored in the project directory.
+Hero collage photos use a 4:5 crop for a balanced layout. Gallery photos use a square crop and are stored separately so you can keep a large collection without affecting the homepage collage.
+
+Photos are stored in Vercel Blob, and tribute records are stored in Postgres. On local development, SQLite is used for tributes; collage/gallery uploads require Blob when deployed.
