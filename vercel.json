@@ -6,7 +6,9 @@
   "installCommand": "npm install",
   "rewrites": [
     { "source": "/admin", "destination": "/admin.html" },
-    { "source": "/admin/", "destination": "/admin.html" }
+    { "source": "/admin/", "destination": "/admin.html" },
+    { "source": "/gallery", "destination": "/gallery.html" },
+    { "source": "/gallery/", "destination": "/gallery.html" }
   ],
   "headers": [
     {
