@@ -44,11 +44,23 @@
       <section class="admin-dashboard" id="admin-dashboard" hidden>
         <section class="collage-settings" aria-labelledby="collage-title">
           <p class="eyebrow">Memorial hero collage</p>
-          <h2 id="collage-title">Up to 5 photos</h2>
-          <p class="collage-intro">Add photos one by one. They appear as a living collage on the memorial homepage — one large photo, or a beautiful multi-photo layout as you add more.</p>
+          <h2 id="collage-title">Up to 4 photos</h2>
+          <p class="collage-intro">Add photos one by one. They appear as a balanced collage on the memorial homepage.</p>
           <div class="collage-slots" id="collage-slots"></div>
           <input class="visually-hidden" id="collage-file" type="file" accept="image/jpeg,image/png,image/webp">
           <p class="form-status" id="collage-status" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="collage-settings gallery-settings" aria-labelledby="gallery-admin-title">
+          <p class="eyebrow">Photo gallery</p>
+          <h2 id="gallery-admin-title">Up to 100 photographs</h2>
+          <p class="collage-intro">These photos appear on the dedicated gallery page that visitors open by scanning the QR code under the hero. Upload as many as you like, up to 100.</p>
+          <div class="gallery-admin-toolbar">
+            <button class="submit-button" type="button" id="gallery-add-button">Add photo <span aria-hidden="true">↗</span></button>
+            <p class="form-status" id="gallery-status" role="status" aria-live="polite"></p>
+          </div>
+          <div class="gallery-admin-grid" id="gallery-admin-grid"></div>
+          <input class="visually-hidden" id="gallery-file" type="file" accept="image/jpeg,image/png,image/webp">
         </section>
 
         <div class="dashboard-toolbar">
@@ -72,7 +84,7 @@
       <div class="crop-dialog-header">
         <div>
           <p class="eyebrow">Adjust photo</p>
-          <h2 id="crop-title">Frame for the collage</h2>
+          <h2 id="crop-title">Frame the photo</h2>
         </div>
         <button class="text-button" type="button" id="cancel-crop">Cancel</button>
       </div>
