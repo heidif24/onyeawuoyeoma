@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f7f5ef">
+    <meta name="description" content="Photographs in loving memory.">
+    <title>Photo gallery | In Loving Memory</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/gallery.js" defer></script>
+  </head>
+  <body class="guest-page gallery-page">
+    <header class="site-header">
+      <a class="wordmark" href="/" aria-label="Memorial home">
+        <span class="wordmark-mark" aria-hidden="true">✳</span>
+        <span>Always remembered</span>
+      </a>
+      <a class="header-link" href="/">Return to memorial <span aria-hidden="true">↗</span></a>
+    </header>
+
+    <main>
+      <section class="gallery-hero" aria-labelledby="gallery-title">
+        <p class="eyebrow">Photographs</p>
+        <h1 id="gallery-title">In loving memory of <span class="memorial-name" id="gallery-memorial-name">Mrs. Onyewuoyeoma Blessing Nwaneri</span></h1>
+        <p class="gallery-intro">A collection of photographs shared by the family. Tap any image to view it larger.</p>
+        <p class="gallery-count" id="gallery-count" aria-live="polite"></p>
+      </section>
+
+      <section class="gallery-grid-section" aria-label="Photo gallery">
+        <div class="gallery-grid" id="gallery-grid">
+          <p class="wall-empty">Photos will appear here once the family adds them.</p>
+        </div>
+      </section>
+    </main>
+
+    <dialog class="lightbox" id="lightbox" aria-label="Enlarged photograph">
+      <button type="button" class="lightbox-close" id="lightbox-close" aria-label="Close">×</button>
+      <button type="button" class="lightbox-nav lightbox-prev" id="lightbox-prev" aria-label="Previous photo">‹</button>
+      <img id="lightbox-image" alt="">
+      <button type="button" class="lightbox-nav lightbox-next" id="lightbox-next" aria-label="Next photo">›</button>
+      <p class="lightbox-caption" id="lightbox-caption"></p>
+    </dialog>
+
+    <footer class="site-footer">
+      <span>Held in love, always.</span>
+      <a href="/">Memorial home</a>
+    </footer>
+  </body>
+</html>
