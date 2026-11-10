@@ -64,6 +64,13 @@ function renderPublishedTributes(tributes) {
   }
 }
 
+function setGalleryQr() {
+  const qr = document.querySelector('#gallery-qr');
+  if (!qr) return;
+  const galleryUrl = `${window.location.origin}/gallery`;
+  qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=12&data=${encodeURIComponent(galleryUrl)}`;
+}
+
 fetch('/api/config')
   .then(readApiResponse)
   .then(({ memorialName: name, collage, portraitUrl }) => {
@@ -76,8 +83,11 @@ fetch('/api/config')
     } else if (portraitUrl) {
       renderCollage([{ slot: 1, url: portraitUrl }]);
     }
+    setGalleryQr();
   })
-  .catch(() => {});
+  .catch(() => {
+    setGalleryQr();
+  });
 
 fetch('/api/tributes')
   .then(readApiResponse)
