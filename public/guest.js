@@ -28,7 +28,8 @@ function renderCollage(collage) {
     const cell = document.createElement('div');
     cell.className = 'collage-cell';
     const img = document.createElement('img');
-    img.src = item.url;
+    // Bust browser/CDN cache so replaced hero photos show immediately
+    img.src = item.url + (item.url.includes('?') ? '&' : '?') + 'v=' + Date.now();
     img.alt = '';
     img.loading = items.indexOf(item) === 0 ? 'eager' : 'lazy';
     cell.append(img);
