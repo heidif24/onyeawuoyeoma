@@ -45,22 +45,24 @@
         <section class="collage-settings" aria-labelledby="collage-title">
           <p class="eyebrow">Memorial hero collage</p>
           <h2 id="collage-title">Up to 4 photos</h2>
-          <p class="collage-intro">Add photos one by one. They appear as a balanced collage on the memorial homepage.</p>
+          <p class="collage-intro">Add photos one by one for the main memorial page collage. Each photo is framed to 4:5 so they sit evenly side by side.</p>
+          <p class="form-status" id="collage-status" role="status" aria-live="polite"></p>
           <div class="collage-slots" id="collage-slots"></div>
           <input class="visually-hidden" id="collage-file" type="file" accept="image/jpeg,image/png,image/webp">
-          <p class="form-status" id="collage-status" role="status" aria-live="polite"></p>
         </section>
 
-        <section class="collage-settings gallery-settings" aria-labelledby="gallery-admin-title">
-          <p class="eyebrow">Photo gallery</p>
-          <h2 id="gallery-admin-title">Up to 100 photographs</h2>
-          <p class="collage-intro">These photos appear on the dedicated gallery page that visitors open by scanning the QR code under the hero. Select one or more photos at once — no cropping needed.</p>
-          <div class="gallery-admin-toolbar">
+        <section class="gallery-settings" aria-labelledby="gallery-title">
+          <div class="gallery-settings-header">
+            <div>
+              <p class="eyebrow">QR code gallery</p>
+              <h2 id="gallery-title">Photo collection</h2>
+              <p class="collage-intro">Photos visitors see when they scan the QR code. Select one or many at once — no cropping required.</p>
+            </div>
             <button class="submit-button" type="button" id="gallery-add-button">Add photos <span aria-hidden="true">↗</span></button>
-            <p class="form-status" id="gallery-status" role="status" aria-live="polite"></p>
           </div>
+          <p class="form-status" id="gallery-status" role="status" aria-live="polite"></p>
           <div class="gallery-admin-grid" id="gallery-admin-grid"></div>
-          <input class="visually-hidden" id="gallery-file" type="file" accept="image/jpeg,image/png,image/webp" multiple>
+          <input class="visually-hidden" id="gallery-file" type="file" accept="image/*" multiple>
         </section>
 
         <div class="dashboard-toolbar">
