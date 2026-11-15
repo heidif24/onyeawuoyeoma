@@ -294,46 +294,67 @@ function openCropperForFile(file, statusEl) {
   cropImage.src = cropSource;
 }
 
-/** Convert any supported image to a JPEG Blob (full image, no crop). */
-function fileToJpegBlob(file, maxSide = 1600, quality = 0.82) {
+/** Load file as Image (works even when file.type is empty, e.g. some phones). */
+function loadImageFromFile(file) {
   return new Promise((resolve, reject) => {
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-      reject(new Error('Choose a JPEG, PNG, or WebP image.'));
-      return;
-    }
-    if (file.size > 20 * 1024 * 1024) {
-      reject(new Error('This photo is over 20 MB. Choose a smaller image.'));
+    if (file.size > 25 * 1024 * 1024) {
+      reject(new Error('This photo is over 25 MB. Choose a smaller image.'));
       return;
     }
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
       URL.revokeObjectURL(url);
-      let { width, height } = img;
-      if (width > maxSide || height > maxSide) {
-        const scale = maxSide / Math.max(width, height);
-        width = Math.round(width * scale);
-        height = Math.round(height * scale);
-      }
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, width, height);
-      ctx.drawImage(img, 0, 0, width, height);
-      canvas.toBlob(
-        (blob) => (blob ? resolve(blob) : reject(new Error('Could not prepare the photo.'))),
-        'image/jpeg',
-        quality,
-      );
+      resolve(img);
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      reject(new Error('This photo could not be opened. Try another image.'));
+      reject(new Error('This photo could not be opened. Try JPEG or PNG.'));
     };
     img.src = url;
   });
+}
+
+/** Draw image to JPEG blob under a size budget (Vercel ~4.5 MB limit). */
+function imageToJpegBlob(img, maxSide, quality) {
+  return new Promise((resolve, reject) => {
+    let { width, height } = img;
+    if (width > maxSide || height > maxSide) {
+      const scale = maxSide / Math.max(width, height);
+      width = Math.round(width * scale);
+      height = Math.round(height * scale);
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, width, height);
+    ctx.drawImage(img, 0, 0, width, height);
+    canvas.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new Error('Could not prepare the photo.'))),
+      'image/jpeg',
+      quality,
+    );
+  });
+}
+
+/** Convert any image file to a JPEG Blob under ~3.5 MB (no crop). */
+async function fileToJpegBlob(file) {
+  const img = await loadImageFromFile(file);
+  const attempts = [
+    { maxSide: 1600, quality: 0.82 },
+    { maxSide: 1400, quality: 0.75 },
+    { maxSide: 1200, quality: 0.7 },
+    { maxSide: 1000, quality: 0.65 },
+  ];
+  const MAX_BYTES = 3.5 * 1024 * 1024;
+  let last = null;
+  for (const opts of attempts) {
+    last = await imageToJpegBlob(img, opts.maxSide, opts.quality);
+    if (last.size <= MAX_BYTES) return last;
+  }
+  return last;
 }
 
 async function uploadGalleryFiles(files) {
@@ -351,7 +372,7 @@ async function uploadGalleryFiles(files) {
   if (list.length > remaining) {
     galleryStatus.textContent = 'Only ' + remaining + ' more photo(s) can be added. Uploading the first ' + remaining + '…';
   } else {
-    galleryStatus.textContent = 'Uploading ' + toUpload.length + ' photo' + (toUpload.length === 1 ? '' : 's') + '…';
+    galleryStatus.textContent = 'Preparing ' + toUpload.length + ' photo' + (toUpload.length === 1 ? '' : 's') + '…';
   }
   galleryStatus.classList.remove('is-error');
   if (galleryAddButton) galleryAddButton.disabled = true;
@@ -360,25 +381,38 @@ async function uploadGalleryFiles(files) {
   let lastGallery = currentGallery;
   const errors = [];
 
-  for (const file of toUpload) {
+  for (let i = 0; i < toUpload.length; i += 1) {
+    const file = toUpload[i];
+    const label = file.name || ('photo ' + (i + 1));
     try {
+      galleryStatus.textContent = 'Preparing ' + (i + 1) + ' of ' + toUpload.length + '…';
       const image = await fileToJpegBlob(file);
+      galleryStatus.textContent = 'Uploading ' + (i + 1) + ' of ' + toUpload.length + '…';
       const response = await fetch('/api/admin/gallery', {
         method: 'POST',
         headers: { 'Content-Type': 'image/jpeg' },
+        credentials: 'same-origin',
         body: image,
       });
-      const result = await readApiResponse(response);
+      let result;
+      try {
+        result = await readApiResponse(response);
+      } catch (parseErr) {
+        throw new Error(
+          response.status === 413
+            ? 'Photo is too large for the server. Try a smaller image.'
+            : (parseErr.message || 'Upload failed (HTTP ' + response.status + ').')
+        );
+      }
       if (!response.ok) throw new Error(result.error || 'The photo could not be saved.');
-      lastGallery = result.gallery;
+      lastGallery = result.gallery || lastGallery;
       ok += 1;
       galleryStatus.textContent = 'Uploaded ' + ok + ' of ' + toUpload.length + '…';
     } catch (err) {
-      errors.push((file.name || 'photo') + ': ' + (err.message || 'failed'));
+      errors.push(label + ': ' + (err.message || 'failed'));
     }
   }
 
-  // Always re-fetch from server so the grid matches the database
   try {
     await loadAssets();
   } catch {
