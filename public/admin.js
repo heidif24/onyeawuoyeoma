@@ -95,7 +95,7 @@ function renderGalleryAdmin(gallery) {
   if (!currentGallery.length) {
     const empty = document.createElement('p');
     empty.className = 'empty-state';
-    empty.textContent = 'No gallery photos yet. Use “Add photo” to begin the collection visitors see when they scan the QR code.';
+    empty.textContent = 'No gallery photos yet. Use “Add photos” to begin the collection visitors see when they scan the QR code.';
     galleryAdminGrid.append(empty);
   } else {
     for (const item of currentGallery) {
@@ -272,9 +272,8 @@ function openCropperForFile(file, statusEl) {
   cropSource = URL.createObjectURL(file);
   cropImage.onload = () => {
     cropper?.destroy();
-    const isGallery = cropMode === 'gallery';
     cropper = new Cropper(cropImage, {
-      aspectRatio: isGallery ? 1 : 4 / 5,
+      aspectRatio: 4 / 5,
       viewMode: 1,
       dragMode: 'move',
       autoCropArea: 0.9,
@@ -283,7 +282,7 @@ function openCropperForFile(file, statusEl) {
       responsive: true,
       restore: false,
     });
-    if (cropTitle) cropTitle.textContent = isGallery ? 'Frame for the gallery' : 'Frame for the collage';
+    if (cropTitle) cropTitle.textContent = 'Frame for the collage';
     cropStatus.textContent = '';
     cropDialog.showModal();
   };
@@ -293,6 +292,108 @@ function openCropperForFile(file, statusEl) {
     URL.revokeObjectURL(cropSource);
   };
   cropImage.src = cropSource;
+}
+
+/** Convert any supported image to a JPEG Blob (full image, no crop). */
+function fileToJpegBlob(file, maxSide = 2000, quality = 0.9) {
+  return new Promise((resolve, reject) => {
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      reject(new Error('Choose a JPEG, PNG, or WebP image.'));
+      return;
+    }
+    if (file.size > 20 * 1024 * 1024) {
+      reject(new Error('This photo is over 20 MB. Choose a smaller image.'));
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      if (width > maxSide || height > maxSide) {
+        const scale = maxSide / Math.max(width, height);
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error('Could not prepare the photo.'))),
+        'image/jpeg',
+        quality,
+      );
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('This photo could not be opened. Try another image.'));
+    };
+    img.src = url;
+  });
+}
+
+async function uploadGalleryFiles(files) {
+  const list = Array.from(files || []).filter(Boolean);
+  if (!list.length) return;
+
+  const remaining = GALLERY_MAX - currentGallery.length;
+  if (remaining <= 0) {
+    galleryStatus.textContent = 'Gallery is full (maximum ' + GALLERY_MAX + ' photos).';
+    galleryStatus.classList.add('is-error');
+    return;
+  }
+
+  const toUpload = list.slice(0, remaining);
+  if (list.length > remaining) {
+    galleryStatus.textContent = 'Only ' + remaining + ' more photo(s) can be added. Uploading the first ' + remaining + '…';
+  } else {
+    galleryStatus.textContent = 'Uploading ' + toUpload.length + ' photo' + (toUpload.length === 1 ? '' : 's') + '…';
+  }
+  galleryStatus.classList.remove('is-error');
+  if (galleryAddButton) galleryAddButton.disabled = true;
+
+  let ok = 0;
+  let lastGallery = currentGallery;
+  const errors = [];
+
+  for (const file of toUpload) {
+    try {
+      const image = await fileToJpegBlob(file);
+      const response = await fetch('/api/admin/gallery', {
+        method: 'POST',
+        headers: { 'Content-Type': 'image/jpeg' },
+        body: image,
+      });
+      const result = await readApiResponse(response);
+      if (!response.ok) throw new Error(result.error || 'The photo could not be saved.');
+      lastGallery = result.gallery;
+      ok += 1;
+      galleryStatus.textContent = 'Uploaded ' + ok + ' of ' + toUpload.length + '…';
+    } catch (err) {
+      errors.push((file.name || 'photo') + ': ' + (err.message || 'failed'));
+    }
+  }
+
+  renderGalleryAdmin(lastGallery);
+  if (ok > 0) {
+    dashboardStatus.textContent =
+      ok === 1 ? '1 photo added to the gallery.' : ok + ' photos added to the gallery.';
+    dashboardStatus.classList.remove('is-error');
+  }
+  if (errors.length) {
+    galleryStatus.textContent =
+      (ok ? ok + ' uploaded. ' : '') + 'Some photos failed: ' + errors.slice(0, 3).join('; ');
+    galleryStatus.classList.add('is-error');
+  } else if (ok === toUpload.length) {
+    galleryStatus.textContent =
+      ok === 1 ? '1 of ' + GALLERY_MAX + ' gallery photographs.' : ok + ' of ' + GALLERY_MAX + ' gallery photographs.';
+    galleryStatus.classList.remove('is-error');
+  }
+  if (galleryAddButton) galleryAddButton.disabled = currentGallery.length >= GALLERY_MAX;
 }
 
 collageSlots.addEventListener('click', async (event) => {
@@ -337,17 +438,14 @@ galleryAddButton?.addEventListener('click', () => {
     galleryStatus.classList.add('is-error');
     return;
   }
-  cropMode = 'gallery';
-  activeSlot = null;
   galleryFile.click();
 });
 
 galleryFile?.addEventListener('change', () => {
-  const file = galleryFile.files[0];
+  const files = galleryFile.files;
   galleryFile.value = '';
-  if (!file) return;
-  cropMode = 'gallery';
-  openCropperForFile(file, galleryStatus);
+  if (!files || !files.length) return;
+  uploadGalleryFiles(files);
 });
 
 galleryAdminGrid?.addEventListener('click', async (event) => {
@@ -384,11 +482,10 @@ cropDialog.addEventListener('close', () => {
 });
 
 saveCropButton.addEventListener('click', () => {
-  const isGallery = cropMode === 'gallery';
-  if (!isGallery && !activeSlot) return;
+  if (!activeSlot) return;
   const canvas = cropper?.getCroppedCanvas({
-    width: isGallery ? 1400 : 1200,
-    height: isGallery ? 1400 : 1500,
+    width: 1200,
+    height: 1500,
     fillColor: '#ffffff',
     imageSmoothingEnabled: true,
     imageSmoothingQuality: 'high',
@@ -399,21 +496,15 @@ saveCropButton.addEventListener('click', () => {
   canvas.toBlob(async (image) => {
     try {
       if (!image) throw new Error('The crop could not be prepared. Please try again.');
-      const endpoint = isGallery ? '/api/admin/gallery' : '/api/admin/collage?slot=' + activeSlot;
-      const response = await fetch(endpoint, {
+      const response = await fetch('/api/admin/collage?slot=' + activeSlot, {
         method: 'POST',
         headers: { 'Content-Type': 'image/jpeg' },
         body: image,
       });
       const result = await readApiResponse(response);
       if (!response.ok) throw new Error(result.error || 'The photo could not be saved.');
-      if (isGallery) {
-        renderGalleryAdmin(result.gallery);
-        dashboardStatus.textContent = 'Photo added to the gallery.';
-      } else {
-        renderCollageSlots(result.collage);
-        dashboardStatus.textContent = 'Photo ' + activeSlot + ' saved to the collage.';
-      }
+      renderCollageSlots(result.collage);
+      dashboardStatus.textContent = 'Photo ' + activeSlot + ' saved to the collage.';
       dashboardStatus.classList.remove('is-error');
       cropDialog.close();
     } catch (error) {
